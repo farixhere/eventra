@@ -5,6 +5,8 @@ export async function GET(request) {
     const eventId = new URL(request.url).searchParams.get("eventId");
     if (!eventId) return Response.json({ error: "eventId is required" }, { status: 400 });
     const sql = getDb();
+
+    // Final results are the official position/prize record.
     const results = await sql`
       SELECT r.id, r.programme_id, r.participant_id, r.team_id, r.position, r.total_score, r.points, r.published,
              r.created_at, p.name AS programme_name, p.type AS programme_type,
@@ -16,7 +18,43 @@ export async function GET(request) {
       WHERE p.event_id = ${eventId}
       ORDER BY r.published DESC, r.position ASC, r.created_at ASC
     `;
-    return Response.json({ results });
+
+    // Live marks are calculated directly from judge scores, so a person's
+    // marks appear in the Results feed as soon as judging data is saved.
+    const liveMarks = await sql`
+      WITH judged AS (
+        SELECT
+          s.programme_id,
+          s.participant_id,
+          s.team_id,
+          s.judge_id,
+          SUM(s.score)::numeric AS judge_total,
+          COUNT(*)::integer AS criteria_scored
+        FROM scores s
+        JOIN programmes p ON p.id = s.programme_id
+        WHERE p.event_id = ${eventId}
+        GROUP BY s.programme_id, s.participant_id, s.team_id, s.judge_id
+      )
+      SELECT
+        programme_id,
+        participant_id,
+        team_id,
+        COUNT(*)::integer AS judges_count,
+        SUM(criteria_scored)::integer AS marks_count,
+        AVG(judge_total)::numeric AS total_score,
+        p.name AS programme_name,
+        p.type AS programme_type,
+        COALESCE(part.name, team.name) AS entry_name,
+        team.name AS team_name
+      FROM judged
+      JOIN programmes p ON p.id = judged.programme_id
+      LEFT JOIN participants part ON part.id = judged.participant_id
+      LEFT JOIN teams team ON team.id = judged.team_id
+      GROUP BY programme_id, participant_id, team_id, p.name, p.type, part.name, team.name
+      ORDER BY p.name ASC, total_score DESC, entry_name ASC
+    `;
+
+    return Response.json({ results, liveMarks });
   } catch (error) {
     console.error("GET /api/results failed", error);
     return Response.json({ error: "Unable to load results" }, { status: 500 });
