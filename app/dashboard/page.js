@@ -12,6 +12,7 @@ const emptyRegistration = { programmeId: "", participantId: "", teamId: "" };
 const emptySchedule = { programmeId: "", venueId: "", startsAt: "", endsAt: "" };
 const emptyResult = { programmeId: "", participantId: "", teamId: "", position: "", totalScore: "", points: "", published: false };
 const emptyJudge = { name: "", email: "" };
+const emptyScore = { programmeId: "", judgeId: "", participantId: "", teamId: "", score: "", notes: "" };
 
 function formatDate(value) {
   if (!value) return "Date not set";
@@ -30,9 +31,11 @@ export default function Dashboard() {
   const [schedules, setSchedules] = useState([]);
   const [results, setResults] = useState([]);
   const [judges, setJudges] = useState([]);
+  const [scores, setScores] = useState([]);
   const [scheduleForm, setScheduleForm] = useState(emptySchedule);
   const [resultForm, setResultForm] = useState(emptyResult);
   const [judgeForm, setJudgeForm] = useState(emptyJudge);
+  const [scoreForm, setScoreForm] = useState(emptyScore);
   const [eventForm, setEventForm] = useState(emptyEvent);
   const [venueForm, setVenueForm] = useState(emptyVenue);
   const [teamForm, setTeamForm] = useState(emptyTeam);
@@ -84,6 +87,21 @@ export default function Dashboard() {
       if (section === "programmes") setProgrammes(data.programmes || []);
       if (section === "registrations") setRegistrations(data.registrations || []);
       if (section === "judges") setJudges(data.judges || []);
+      if (section === "scores") {
+        setScores(data.scores || []);
+        const [programmesResponse, participantsResponse, teamsResponse, judgesResponse] = await Promise.all([
+          fetch("/api/programmes?eventId=" + eventId, { cache: "no-store" }),
+          fetch("/api/participants?eventId=" + eventId, { cache: "no-store" }),
+          fetch("/api/teams?eventId=" + eventId, { cache: "no-store" }),
+          fetch("/api/judges?eventId=" + eventId, { cache: "no-store" })
+        ]);
+        const [programmesData, participantsData, teamsData, judgesData] = await Promise.all([programmesResponse.json(), participantsResponse.json(), teamsResponse.json(), judgesResponse.json()]);
+        if (!programmesResponse.ok || !participantsResponse.ok || !teamsResponse.ok || !judgesResponse.ok) throw new Error("Unable to load scoring options");
+        setProgrammes(programmesData.programmes || []);
+        setParticipants(participantsData.participants || []);
+        setTeams(teamsData.teams || []);
+        setJudges(judgesData.judges || []);
+      }
       if (section === "results") {
         setResults(data.results || []);
         const [programmesResponse, participantsResponse, teamsResponse] = await Promise.all([
@@ -167,7 +185,8 @@ export default function Dashboard() {
   const registrationCount = registrations.length;
   const scheduleCount = schedules.length;
   const judgeCount = judges.length;
-  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["judges","Judges"],["results","Results"],["certificates","Certificates"]];
+  const scoreCount = scores.length;
+  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["judges","Judges"],["scores","Scoring"],["results","Results"],["certificates","Certificates"]];
 
   return (
     <main className="dashboardPage">
@@ -240,6 +259,19 @@ export default function Dashboard() {
             </form>
             <ResourceList items={judges} kind="judges" empty="No judges added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.email || "No email added"}</span></>} />
           </ResourcePanel>}
+
+          {section === "scores" && selectedEvent(events, selectedId) && <div className="scorePanel">
+            <div className="scoreHeader"><div><small>COMPETITION ENGINE</small><h2>Scoring</h2><p>Record judge scores for every registered entry.</p></div><div className="scoreHeaderMeta"><strong>{scoreCount.toString().padStart(2,"0")}</strong><span>scores</span></div></div>
+            <form className="scoreForm" onSubmit={(e) => { e.preventDefault(); createResource("scores", scoreForm, () => setScoreForm(emptyScore)); }}>
+              <div className="scoreField"><label>Programme</label><select value={scoreForm.programmeId} onChange={(e)=>setScoreForm({...scoreForm,programmeId:e.target.value,participantId:"",teamId:""})} required><option value="">Choose programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name} · {p.type}</option>)}</select></div>
+              <div className="scoreField"><label>Judge</label><select value={scoreForm.judgeId} onChange={(e)=>setScoreForm({...scoreForm,judgeId:e.target.value})} required><option value="">Choose judge</option>{judges.map((j)=><option key={j.id} value={j.id}>{j.name}</option>)}</select></div>
+              <div className="scoreField"><label>Entry</label>{programmes.find((p)=>p.id===scoreForm.programmeId)?.type === "team" ? <select value={scoreForm.teamId} onChange={(e)=>setScoreForm({...scoreForm,teamId:e.target.value})} required><option value="">Choose team</option>{teams.map((t)=><option key={t.id} value={t.id}>{t.name}</option>)}</select> : <select value={scoreForm.participantId} onChange={(e)=>setScoreForm({...scoreForm,participantId:e.target.value})} required><option value="">Choose participant</option>{participants.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select>}</div>
+              <div className="scoreField"><label>Score</label><input type="number" min="0" step="0.01" value={scoreForm.score} onChange={(e)=>setScoreForm({...scoreForm,score:e.target.value})} placeholder="0" required /></div>
+              <div className="scoreField scoreNotes"><label>Notes</label><input value={scoreForm.notes} onChange={(e)=>setScoreForm({...scoreForm,notes:e.target.value})} placeholder="Optional judge note" /></div>
+              <button disabled={saving}>{saving ? "Saving…" : "+ Save score"}</button>
+            </form>
+            {loadingSection ? <div className="eventEmpty">Loading scores…</div> : !scores.length ? <div className="eventEmpty"><strong>No scores yet.</strong><span>Add judges and programmes, then record the first score.</span></div> : <div className="scoreList">{scores.map((item)=><div className="scoreRow" key={item.id}><div className="scoreValue"><strong>{item.score}</strong><span>points</span></div><div className="scoreInfo"><strong>{item.entry_name}</strong><span>{item.programme_name} · Judge: {item.judge_name}{item.team_name ? " · " + item.team_name : ""}</span></div><div className="scoreNote">{item.notes || "No note"}</div><button className="scoreDelete" onClick={()=>removeResource("scores",item.id)}>Delete</button></div>)}</div>}
+          </div>}
 
           {section === "results" && selectedEvent(events, selectedId) && <div className="resultPanel">
             <div className="resultHeader"><div><small>EVENT MANAGEMENT</small><h2>Results</h2><p>Record positions, scores and publish the final standings.</p></div><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div></div>
