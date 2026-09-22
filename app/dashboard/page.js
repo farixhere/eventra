@@ -198,14 +198,46 @@ export default function Dashboard() {
     <main className="dashboardPage">
       <header className="dashNav"><Link className="brand" href="/">eventra<span>.</span></Link><div><span className="statusDot"></span> Workspace</div><Link href="/">← Website</Link></header>
       <div className="dashShell">
-        <aside className="sideNav"><small>WORKSPACE</small>{nav.map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}>{label}</button>)}<small className="space">SYSTEM</small><button>Settings</button></aside>
+        <aside className="sideNav">
+  <div className="sideBrand"><span className="sideBrandMark">e</span><div><strong>Eventra</strong><small>EVENT CONTROL</small></div></div>
+  <small>EVENT SETUP</small>
+  {nav.slice(0,5).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span>{key === "events" ? <b>⌂</b> : key === "venues" ? <b>⌁</b> : key === "teams" ? <b>◌</b> : key === "participants" ? <b>◎</b> : <b>▦</b>}</button>)}
+  <small className="space">OPERATIONS</small>
+  {nav.slice(5,9).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "registrations" ? "↳" : key === "schedules" ? "◷" : key === "judges" ? "♢" : "✦"}</b></button>)}
+  <small className="space">RESULTS & DOCUMENTS</small>
+  {nav.slice(9).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "leaderboard" ? "↟" : key === "results" ? "◈" : "□"}</b></button>)}
+  <div className="sideBottom"><button>⚙ <span>Settings</span></button><Link href="/">↗ <span>View website</span></Link></div>
+</aside>
         <section className="workspace">
-          <div className="workspaceTop"><div><small>EVENT WORKSPACE</small><h1>{selectedEvent(events, selectedId)?.name || "Good afternoon."}</h1><p>{selectedEvent(events, selectedId) ? formatDate(selectedEvent(events, selectedId).start_date) + " · " + (selectedEvent(events, selectedId).location || "Location not set") : "Your event workspace is ready."}</p></div><button onClick={() => { setError(""); setOpen(true); }}>+ New event</button></div>
+          <div className="workspaceTop">
+  <div className="workspaceTitle">
+    <div className="workspaceEyebrow"><span className="livePulse"></span> EVENT CONTROL CENTER</div>
+    <h1>{selectedEvent(events, selectedId)?.name || "Welcome to Eventra"}</h1>
+    <p>{selectedEvent(events, selectedId) ? formatDate(selectedEvent(events, selectedId).start_date) + " · " + (selectedEvent(events, selectedId).location || "Location not set") : "Create an event and start building your festival."}</p>
+  </div>
+  <div className="workspaceActions">
+    {selectedEvent(events, selectedId) && <a href={"/event/" + selectedEvent(events, selectedId).slug} target="_blank" rel="noreferrer">View public site ↗</a>}
+    <button onClick={() => { setError(""); setOpen(true); }}>+ New event</button>
+  </div>
+</div>
           {error && <div className="formError">{error}</div>}
-          <div className="statGrid"><div className="stat"><small>Active events</small><strong>{events.filter((event) => event.status === "live").length.toString().padStart(2,"0")}</strong><span>{events.length} total events</span></div><div className="stat"><small>Participants</small><strong>{participantCount.toLocaleString()}</strong><span>In selected event</span></div><div className="stat"><small>Programmes</small><strong>{programmeCount}</strong><span>Coming next</span></div><div className="stat"><small>Results</small><strong>{resultCount}</strong><span>Published</span></div></div>
+          <div className="statGrid">
+  <div className="stat statAccent"><small>Events</small><strong>{events.length.toString().padStart(2,"0")}</strong><span>{events.filter((event) => event.status === "live").length} live now</span></div>
+  <div className="stat"><small>Participants</small><strong>{participantCount.toLocaleString()}</strong><span>Registered in event</span></div>
+  <div className="stat"><small>Programmes</small><strong>{programmeCount}</strong><span>Competitions & activities</span></div>
+  <div className="stat"><small>Published results</small><strong>{resultCount}</strong><span>Ready for public view</span></div>
+</div>
+{selectedEvent(events, selectedId) && <div className="commandStrip">
+  <div><span className="commandIcon">✦</span><div><strong>Event command center</strong><span>Manage the festival from setup to results.</span></div></div>
+  <div className="commandActions">
+    <button onClick={() => setSection("programmes")}>+ Programme</button>
+    <button onClick={() => setSection("participants")}>+ Participant</button>
+    <button onClick={() => setSection("schedules")}>Build schedule →</button>
+  </div>
+</div>}
           {events.length > 0 && <div className="eventSelector"><label>MANAGING EVENT<select value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>{events.map((event) => <option key={event.id} value={event.id}>{event.name}</option>)}</select></label></div>}
 
-          {section === "events" && <div className="eventPanel"><div className="panelTop"><h2>Recent events</h2><button onClick={loadEvents}>Refresh →</button></div>{loading ? <div className="eventEmpty">Loading your events…</div> : events.length === 0 ? <div className="eventEmpty"><strong>No events yet.</strong><span>Create your first event to start building Eventra.</span><button onClick={() => setOpen(true)}>+ Create your first event</button></div> : events.map((event) => <button className={"eventRow eventRowButton " + (event.id === selectedId ? "eventRowActive" : "")} key={event.id} onClick={() => setSelectedId(event.id)}><div><strong>{event.name}</strong><span>{formatDate(event.start_date)} · {event.location || "Location not set"}</span></div><span className={"pill " + (event.status === "live" ? "live" : "")}>{event.status}</span><a className="eventPublicLink" href={"/event/" + event.slug} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>View site ↗</a><span className="eventDelete" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); removeEvent(event.id, event.name); }}>Delete</span><span className="rowArrow">→</span></button>)}</div>}
+          {section === "events" && <div className="eventPanel"><div className="panelTop"><div><small>YOUR FESTIVALS</small><h2>Recent events</h2></div><button onClick={loadEvents}>Refresh →</button></div>{loading ? <div className="eventEmpty">Loading your events…</div> : events.length === 0 ? <div className="eventEmpty"><strong>No events yet.</strong><span>Create your first event to start building Eventra.</span><button onClick={() => setOpen(true)}>+ Create your first event</button></div> : events.map((event) => <div className={"eventRow eventRowButton " + (event.id === selectedId ? "eventRowActive" : "")} key={event.id} onClick={() => setSelectedId(event.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedId(event.id); }}><div><strong>{event.name}</strong><span>{formatDate(event.start_date)} · {event.location || "Location not set"}</span></div><span className={"pill " + (event.status === "live" ? "live" : "")}>{event.status}</span><a className="eventPublicLink" href={"/event/" + event.slug} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>View site ↗</a><button type="button" className="eventDelete" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); removeEvent(event.id, event.name); }}>Delete</button><span className="rowArrow">→</span></div>)}</div>}
 
           {section !== "events" && !selectedEvent(events, selectedId) && <div className="eventEmpty"><strong>Create an event first.</strong><span>Resources belong to an event.</span></div>}
 
