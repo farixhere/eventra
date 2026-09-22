@@ -12,7 +12,9 @@ const emptyRegistration = { programmeId: "", participantId: "", teamId: "" };
 const emptySchedule = { programmeId: "", venueId: "", startsAt: "", endsAt: "" };
 const emptyResult = { programmeId: "", participantId: "", teamId: "", position: "", totalScore: "", points: "", published: false };
 const emptyJudge = { name: "", email: "" };
-const emptyScore = { programmeId: "", judgeId: "", participantId: "", teamId: "", score: "", notes: "" };
+const emptyScore = { programmeId: "", judgeId: "", participantId: "", teamId: "", criterionId: "", score: "", notes: "" };
+const emptyCriterion = { programmeId: "", name: "", maxScore: "" };
+const emptyPointRule = { programmeId: "", position: "", points: "" };
 const emptyLeaderboard = [];
 
 function formatDate(value) {
@@ -33,12 +35,16 @@ export default function Dashboard() {
   const [results, setResults] = useState([]);
   const [judges, setJudges] = useState([]);
   const [scores, setScores] = useState([]);
+  const [criteria, setCriteria] = useState([]);
+  const [pointRules, setPointRules] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [scheduleForm, setScheduleForm] = useState(emptySchedule);
   const [resultForm, setResultForm] = useState(emptyResult);
   const [judgeForm, setJudgeForm] = useState(emptyJudge);
   const [scoreForm, setScoreForm] = useState(emptyScore);
+  const [criterionForm, setCriterionForm] = useState(emptyCriterion);
+  const [pointRuleForm, setPointRuleForm] = useState(emptyPointRule);
   const [eventForm, setEventForm] = useState(emptyEvent);
   const [venueForm, setVenueForm] = useState(emptyVenue);
   const [teamForm, setTeamForm] = useState(emptyTeam);
@@ -94,18 +100,22 @@ export default function Dashboard() {
       if (section === "certificates") setCertificates(data.certificates || []);
       if (section === "scores") {
         setScores(data.scores || []);
-        const [programmesResponse, participantsResponse, teamsResponse, judgesResponse] = await Promise.all([
+        const [programmesResponse, participantsResponse, teamsResponse, judgesResponse, criteriaResponse, pointRulesResponse] = await Promise.all([
           fetch("/api/programmes?eventId=" + eventId, { cache: "no-store" }),
           fetch("/api/participants?eventId=" + eventId, { cache: "no-store" }),
           fetch("/api/teams?eventId=" + eventId, { cache: "no-store" }),
-          fetch("/api/judges?eventId=" + eventId, { cache: "no-store" })
+          fetch("/api/judges?eventId=" + eventId, { cache: "no-store" }),
+          fetch("/api/criteria?eventId=" + eventId, { cache: "no-store" }),
+          fetch("/api/point-rules?eventId=" + eventId, { cache: "no-store" })
         ]);
-        const [programmesData, participantsData, teamsData, judgesData] = await Promise.all([programmesResponse.json(), participantsResponse.json(), teamsResponse.json(), judgesResponse.json()]);
-        if (!programmesResponse.ok || !participantsResponse.ok || !teamsResponse.ok || !judgesResponse.ok) throw new Error("Unable to load scoring options");
+        const [programmesData, participantsData, teamsData, judgesData, criteriaData, pointRulesData] = await Promise.all([programmesResponse.json(), participantsResponse.json(), teamsResponse.json(), judgesResponse.json(), criteriaResponse.json(), pointRulesResponse.json()]);
+        if (!programmesResponse.ok || !participantsResponse.ok || !teamsResponse.ok || !judgesResponse.ok || !criteriaResponse.ok || !pointRulesResponse.ok) throw new Error("Unable to load scoring options");
         setProgrammes(programmesData.programmes || []);
         setParticipants(participantsData.participants || []);
         setTeams(teamsData.teams || []);
         setJudges(judgesData.judges || []);
+        setCriteria(criteriaData.criteria || []);
+        setPointRules(pointRulesData.rules || []);
       }
       if (section === "results") {
         setResults(data.results || []);
@@ -209,6 +219,9 @@ export default function Dashboard() {
   const judgeCount = judges.length;
   const scoreCount = scores.length;
   const certificateCount = certificates.length;
+  const selectedScoreProgramme = programmes.find((p) => p.id === scoreForm.programmeId);
+  const selectedCriteria = criteria.filter((item) => item.programme_id === scoreForm.programmeId);
+  const totalCriteriaScore = selectedCriteria.reduce((sum, item) => sum + Number(item.max_score || 0), 0);
   const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["judges","Judges"],["scores","Scoring"],["leaderboard","Leaderboard"],["results","Results"],["certificates","Certificates"]];
 
   return (
@@ -317,15 +330,15 @@ export default function Dashboard() {
 
           {section === "scores" && selectedEvent(events, selectedId) && <div className="scorePanel">
             <div className="scoreHeader"><div><small>COMPETITION ENGINE</small><h2>Scoring</h2><p>Record judge scores for every registered entry.</p></div><div className="scoreHeaderMeta"><strong>{scoreCount.toString().padStart(2,"0")}</strong><span>scores</span></div></div>
-            <form className="scoreForm" onSubmit={(e) => { e.preventDefault(); createResource("scores", scoreForm, () => setScoreForm(emptyScore)); }}>
+            <div className="scoringRulesGrid"><div className="scoringRulesCard"><div className="scoringRulesCardHead"><div><small>PROGRAMME RULES</small><strong>Mark criteria</strong><span>Set the maximum marks judges can award for each criterion.</span></div><span className="rulesTotal">{criterionForm.programmeId ? criteria.filter((item) => item.programme_id === criterionForm.programmeId).reduce((sum, item) => sum + Number(item.max_score || 0), 0) : 0} max</span></div><form className="ruleForm" onSubmit={(e) => { e.preventDefault(); createResource("criteria", criterionForm, () => setCriterionForm(emptyCriterion)); }}><select value={criterionForm.programmeId} onChange={(e) => setCriterionForm({...criterionForm,programmeId:e.target.value})} required><option value="">Programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select><input value={criterionForm.name} onChange={(e)=>setCriterionForm({...criterionForm,name:e.target.value})} placeholder="Criterion e.g. Technique" required /><input type="number" min="0.01" step="0.01" value={criterionForm.maxScore} onChange={(e)=>setCriterionForm({...criterionForm,maxScore:e.target.value})} placeholder="Max marks" required /><button disabled={saving}>+ Add</button></form>{criteria.length ? <div className="rulesList">{criteria.map((item)=><div className="ruleRow" key={item.id}><div><strong>{item.name}</strong><span>{item.programme_name} · max {item.max_score}</span></div><button onClick={()=>removeResource("criteria",item.id)}>Delete</button></div>)}</div> : <div className="rulesEmpty">No criteria configured yet.</div>}</div><div className="scoringRulesCard"><div className="scoringRulesCardHead"><div><small>PRIZE POINTS</small><strong>Position rules</strong><span>Choose how much team leaderboard credit each position earns.</span></div><span className="rulesTotal">{pointRules.length} rules</span></div><form className="ruleForm" onSubmit={(e) => { e.preventDefault(); createResource("point-rules", pointRuleForm, () => setPointRuleForm(emptyPointRule)); }}><select value={pointRuleForm.programmeId} onChange={(e) => setPointRuleForm({...pointRuleForm,programmeId:e.target.value})} required><option value="">Programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select><input type="number" min="1" value={pointRuleForm.position} onChange={(e)=>setPointRuleForm({...pointRuleForm,position:e.target.value})} placeholder="Position" required /><input type="number" min="0" step="0.01" value={pointRuleForm.points} onChange={(e)=>setPointRuleForm({...pointRuleForm,points:e.target.value})} placeholder="Points" required /><button disabled={saving}>+ Save</button></form>{pointRules.length ? <div className="rulesList">{pointRules.map((item)=><div className="ruleRow" key={item.id}><div><strong>#{item.position} · {item.points} pts</strong><span>{item.programme_name}</span></div><button onClick={()=>removeResource("point-rules",item.id)}>Delete</button></div>)}</div> : <div className="rulesEmpty">Default points are used until you add programme rules.</div>}</div></div><form className="scoreForm" onSubmit={(e) => { e.preventDefault(); createResource("scores", scoreForm, () => setScoreForm(emptyScore)); }}>
               <div className="scoreField"><label>Programme</label><select value={scoreForm.programmeId} onChange={(e)=>setScoreForm({...scoreForm,programmeId:e.target.value,participantId:"",teamId:""})} required><option value="">Choose programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name} · {p.type}</option>)}</select></div>
               <div className="scoreField"><label>Judge</label><select value={scoreForm.judgeId} onChange={(e)=>setScoreForm({...scoreForm,judgeId:e.target.value})} required><option value="">Choose judge</option>{judges.map((j)=><option key={j.id} value={j.id}>{j.name}</option>)}</select></div>
               <div className="scoreField"><label>Entry</label>{programmes.find((p)=>p.id===scoreForm.programmeId)?.type === "team" ? <select value={scoreForm.teamId} onChange={(e)=>setScoreForm({...scoreForm,teamId:e.target.value})} required><option value="">Choose team</option>{teams.map((t)=><option key={t.id} value={t.id}>{t.name}</option>)}</select> : <select value={scoreForm.participantId} onChange={(e)=>setScoreForm({...scoreForm,participantId:e.target.value})} required><option value="">Choose participant</option>{participants.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select>}</div>
-              <div className="scoreField"><label>Score</label><input type="number" min="0" step="0.01" value={scoreForm.score} onChange={(e)=>setScoreForm({...scoreForm,score:e.target.value})} placeholder="0" required /></div>
+              <div className="scoreField"><label>Criterion</label><select value={scoreForm.criterionId} onChange={(e)=>setScoreForm({...scoreForm,criterionId:e.target.value,score:""})} required={selectedCriteria.length > 0} disabled={!selectedScoreProgramme || selectedCriteria.length === 0}><option value="">{selectedCriteria.length ? "Choose criterion" : "No criteria — enter total mark"}</option>{selectedCriteria.map((item)=><option key={item.id} value={item.id}>{item.name} · max {item.max_score}</option>)}</select></div><div className="scoreField"><label>{scoreForm.criterionId ? "Mark" : "Score"}{scoreForm.criterionId ? " / " + (selectedCriteria.find((item)=>item.id===scoreForm.criterionId)?.max_score ?? "") : ""}</label><input type="number" min="0" max={scoreForm.criterionId ? selectedCriteria.find((item)=>item.id===scoreForm.criterionId)?.max_score : undefined} step="0.01" value={scoreForm.score} onChange={(e)=>setScoreForm({...scoreForm,score:e.target.value})} placeholder="0" required /></div>
               <div className="scoreField scoreNotes"><label>Notes</label><input value={scoreForm.notes} onChange={(e)=>setScoreForm({...scoreForm,notes:e.target.value})} placeholder="Optional judge note" /></div>
               <button disabled={saving}>{saving ? "Saving…" : "+ Save score"}</button>
             </form>
-            {loadingSection ? <div className="eventEmpty">Loading scores…</div> : !scores.length ? <div className="eventEmpty"><strong>No scores yet.</strong><span>Add judges and programmes, then record the first score.</span></div> : <div className="scoreList">{scores.map((item)=><div className="scoreRow" key={item.id}><div className="scoreValue"><strong>{item.score}</strong><span>points</span></div><div className="scoreInfo"><strong>{item.entry_name}</strong><span>{item.programme_name} · Judge: {item.judge_name}{item.team_name ? " · " + item.team_name : ""}</span></div><div className="scoreNote">{item.notes || "No note"}</div><button className="scoreDelete" onClick={()=>removeResource("scores",item.id)}>Delete</button></div>)}</div>}
+            {loadingSection ? <div className="eventEmpty">Loading scores…</div> : !scores.length ? <div className="eventEmpty"><strong>No scores yet.</strong><span>Add judges and programmes, then record the first score.</span></div> : <div className="scoreList">{scores.map((item)=><div className="scoreRow" key={item.id}><div className="scoreValue"><strong>{item.score}</strong><span>points</span></div><div className="scoreInfo"><strong>{item.entry_name}</strong><span>{item.programme_name}{item.criterion_name ? " · " + item.criterion_name : ""} · Judge: {item.judge_name}{item.team_name ? " · " + item.team_name : ""}</span></div><div className="scoreNote">{item.notes || "No note"}</div><button className="scoreDelete" onClick={()=>removeResource("scores",item.id)}>Delete</button></div>)}</div>}
           </div>}
 
           {section === "leaderboard" && selectedEvent(events, selectedId) && <div className="leaderboardPanel">
