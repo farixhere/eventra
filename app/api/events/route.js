@@ -70,3 +70,31 @@ export async function POST(request) {
     return Response.json({ error: "Unable to create event" }, { status: 500 });
   }
 }
+
+
+export async function DELETE(request) {
+  try {
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "id is required" }, { status: 400 });
+
+    const sql = getDb();
+    await sql.transaction([
+      sql`DELETE FROM scores WHERE programme_id IN (SELECT id FROM programmes WHERE event_id = ${id})`,
+      sql`DELETE FROM results WHERE programme_id IN (SELECT id FROM programmes WHERE event_id = ${id})`,
+      sql`DELETE FROM schedules WHERE programme_id IN (SELECT id FROM programmes WHERE event_id = ${id})`,
+      sql`DELETE FROM registrations WHERE programme_id IN (SELECT id FROM programmes WHERE event_id = ${id})`,
+      sql`DELETE FROM announcements WHERE event_id = ${id}`,
+      sql`DELETE FROM judges WHERE event_id = ${id}`,
+      sql`DELETE FROM programmes WHERE event_id = ${id}`,
+      sql`DELETE FROM participants WHERE event_id = ${id}`,
+      sql`DELETE FROM teams WHERE event_id = ${id}`,
+      sql`DELETE FROM venues WHERE event_id = ${id}`,
+      sql`DELETE FROM events WHERE id = ${id}`
+    ]);
+
+    return Response.json({ ok: true });
+  } catch (error) {
+    console.error("DELETE /api/events failed", error);
+    return Response.json({ error: "Unable to delete event" }, { status: 500 });
+  }
+}
