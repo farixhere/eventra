@@ -9,7 +9,7 @@ const emptyTeam = { name: "", code: "" };
 const emptyParticipant = { name: "", email: "", phone: "", participantCode: "", teamId: "" };
 const emptyProgramme = { name: "", category: "", type: "individual", maxParticipants: "" };
 const emptyRegistration = { programmeId: "", participantId: "", teamId: "" };
-const emptySchedule = { programmeId: "", venueId: "", startsAt: "", endsAt: "" };
+const emptySchedule = { programmeId: "", venueId: "", startsAt: "", endsAt: "" };\nconst emptyResult = { programmeId: "", participantId: "", teamId: "", position: "", totalScore: "", points: "", published: false };
 
 function formatDate(value) {
   if (!value) return "Date not set";
@@ -25,8 +25,8 @@ export default function Dashboard() {
   const [participants, setParticipants] = useState([]);
   const [programmes, setProgrammes] = useState([]);
   const [registrations, setRegistrations] = useState([]);
-  const [schedules, setSchedules] = useState([]);
-  const [scheduleForm, setScheduleForm] = useState(emptySchedule);
+  const [schedules, setSchedules] = useState([]);\n  const [results, setResults] = useState([]);
+  const [scheduleForm, setScheduleForm] = useState(emptySchedule);\n  const [resultForm, setResultForm] = useState(emptyResult);
   const [eventForm, setEventForm] = useState(emptyEvent);
   const [venueForm, setVenueForm] = useState(emptyVenue);
   const [teamForm, setTeamForm] = useState(emptyTeam);
@@ -77,7 +77,7 @@ export default function Dashboard() {
       if (section === "participants") setParticipants(data.participants || []);
       if (section === "programmes") setProgrammes(data.programmes || []);
       if (section === "registrations") setRegistrations(data.registrations || []);
-      if (section === "schedules") {
+      if (section === "results") {\n        setResults(data.results || []);\n        const [programmesResponse, participantsResponse, teamsResponse] = await Promise.all([\n          fetch("/api/programmes?eventId=" + eventId, { cache: "no-store" }),\n          fetch("/api/participants?eventId=" + eventId, { cache: "no-store" }),\n          fetch("/api/teams?eventId=" + eventId, { cache: "no-store" })\n        ]);\n        const [programmesData, participantsData, teamsData] = await Promise.all([programmesResponse.json(), participantsResponse.json(), teamsResponse.json()]);\n        if (!programmesResponse.ok || !participantsResponse.ok || !teamsResponse.ok) throw new Error("Unable to load result options");\n        setProgrammes(programmesData.programmes || []);\n        setParticipants(participantsData.participants || []);\n        setTeams(teamsData.teams || []);\n      }\n      if (section === "schedules") {
         setSchedules(data.schedules || []);
         const [programmesResponse, venuesResponse] = await Promise.all([
           fetch("/api/programmes?eventId=" + eventId, { cache: "no-store" }),
@@ -143,7 +143,7 @@ export default function Dashboard() {
 
   const participantCount = participants.length;
   const programmeCount = programmes.length;
-  const resultCount = 0;
+  const resultCount = results.filter((item) => item.published).length;
   const registrationCount = registrations.length;
   const scheduleCount = schedules.length;
   const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["results","Results"],["certificates","Certificates"]];
@@ -207,6 +207,27 @@ export default function Dashboard() {
                 <div className="scheduleTime"><strong>{new Date(item.starts_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong><span>{new Date(item.ends_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span></div>
                 <div className="scheduleInfo"><strong>{item.programme_name}</strong><span>{item.venue_name || "Venue not assigned"}{item.programme_category ? " · " + item.programme_category : ""}</span></div>
                 <button className="scheduleDelete" onClick={() => removeResource("schedules", item.id)}>Delete</button>
+              </div>)}
+            </div>}
+          </div>}
+
+          {section === "results" && selectedEvent(events, selectedId) && <div className="resultPanel">
+            <div className="resultHeader"><div><small>EVENT MANAGEMENT</small><h2>Results</h2><p>Record positions, scores and publish the final standings.</p></div><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div></div>
+            <form className="resultForm" onSubmit={(e) => { e.preventDefault(); createResource("results", resultForm, () => setResultForm(emptyResult)); }}>
+              <div className="resultField"><label>Programme</label><select value={resultForm.programmeId} onChange={(e) => { const programmeId=e.target.value; setResultForm({...resultForm,programmeId,participantId:"",teamId:""}); }} required><option value="">Choose programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name} · {p.type}</option>)}</select></div>
+              <div className="resultField"><label>Entry</label>{programmes.find((p)=>p.id===resultForm.programmeId)?.type === "team" ? <select value={resultForm.teamId} onChange={(e)=>setResultForm({...resultForm,teamId:e.target.value})} required><option value="">Choose team</option>{teams.map((t)=><option key={t.id} value={t.id}>{t.name}</option>)}</select> : <select value={resultForm.participantId} onChange={(e)=>setResultForm({...resultForm,participantId:e.target.value})} required><option value="">Choose participant</option>{participants.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select>}</div>
+              <div className="resultField"><label>Position</label><input type="number" min="1" value={resultForm.position} onChange={(e)=>setResultForm({...resultForm,position:e.target.value})} placeholder="1" required /></div>
+              <div className="resultField"><label>Total score</label><input type="number" min="0" step="0.01" value={resultForm.totalScore} onChange={(e)=>setResultForm({...resultForm,totalScore:e.target.value})} placeholder="0" /></div>
+              <div className="resultField"><label>Points</label><input type="number" min="0" step="0.01" value={resultForm.points} onChange={(e)=>setResultForm({...resultForm,points:e.target.value})} placeholder="0" /></div>
+              <label className="resultPublish"><input type="checkbox" checked={resultForm.published} onChange={(e)=>setResultForm({...resultForm,published:e.target.checked})} /> Publish</label>
+              <button disabled={saving}>{saving ? "Saving…" : "+ Add result"}</button>
+            </form>
+            {loadingSection ? <div className="eventEmpty">Loading results…</div> : !results.length ? <div className="eventEmpty"><strong>No results yet.</strong><span>Add a result after judging is complete for a programme.</span></div> : <div className="resultList">
+              {results.map((item) => <div className="resultRow" key={item.id}>
+                <div className="resultPosition"><strong>#{item.position}</strong><span>{item.published ? "Published" : "Draft"}</span></div>
+                <div className="resultInfo"><strong>{item.entry_name}</strong><span>{item.programme_name}{item.team_name ? " · " + item.team_name : ""}</span></div>
+                <div className="resultScore"><strong>{item.total_score ?? "—"}</strong><span>{item.points ?? "0"} pts</span></div>
+                <button className="resultDelete" onClick={() => removeResource("results", item.id)}>Delete</button>
               </div>)}
             </div>}
           </div>}
