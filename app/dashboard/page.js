@@ -33,6 +33,7 @@ export default function Dashboard() {
   const [registrations, setRegistrations] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [results, setResults] = useState([]);
+  const [liveMarks, setLiveMarks] = useState([]);
   const [judges, setJudges] = useState([]);
   const [scores, setScores] = useState([]);
   const [criteria, setCriteria] = useState([]);
@@ -119,6 +120,7 @@ export default function Dashboard() {
       }
       if (section === "results") {
         setResults(data.results || []);
+        setLiveMarks(data.liveMarks || []);
         const [programmesResponse, participantsResponse, teamsResponse] = await Promise.all([
           fetch("/api/programmes?eventId=" + eventId, { cache: "no-store" }),
           fetch("/api/participants?eventId=" + eventId, { cache: "no-store" }),
@@ -214,6 +216,7 @@ export default function Dashboard() {
   const participantCount = participants.length;
   const programmeCount = programmes.length;
   const resultCount = results.filter((item) => item.published).length;
+  const liveMarkCount = liveMarks.length;
   const registrationCount = registrations.length;
   const scheduleCount = schedules.length;
   const judgeCount = judges.length;
@@ -366,7 +369,17 @@ export default function Dashboard() {
           </div>}
 
           {section === "results" && selectedEvent(events, selectedId) && <div className="resultPanel">
-            <div className="resultHeader"><div><small>EVENT MANAGEMENT</small><h2>Results</h2><p>Record positions, scores and publish the final standings.</p></div><div className="resultHeaderTools"><button className="resultAutoButton" type="button" onClick={generateDraftResults} disabled={saving}>✦ Generate drafts</button><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div></div></div>
+            <div className="resultHeader"><div><small>RESULTS FEED</small><h2>Results</h2><p>Judge marks appear here automatically. Final positions and prize points are published separately.</p></div><div className="resultHeaderTools"><div className="resultHeaderMeta"><strong>{liveMarkCount.toString().padStart(2,"0")}</strong><span>entries scored</span></div></div></div>
+            <div className="liveMarksPanel">
+              <div className="liveMarksHead"><div><small>LIVE JUDGE MARKS</small><strong>Individual scores</strong><span>Every person's current mark is shown here as soon as a judge submits it.</span></div><span>{liveMarkCount} entries</span></div>
+              {liveMarkCount ? <div className="liveMarksList">{liveMarks.map((item) => <div className="liveMarkRow" key={item.programme_id + ":" + (item.participant_id || item.team_id)}>
+                <div className="liveMarkScore"><strong>{Number(item.total_score).toFixed(2).replace(/\.00$/,"")}</strong><span>mark</span></div>
+                <div className="liveMarkInfo"><strong>{item.entry_name}</strong><span>{item.programme_name}{item.team_name ? " · " + item.team_name : ""}</span></div>
+                <div className="liveMarkMeta"><strong>{item.judges_count}</strong><span>{item.judges_count === 1 ? "judge" : "judges"}</span></div>
+                <div className="liveMarkStatus">Live</div>
+              </div>)}</div> : <div className="eventEmpty"><strong>No judge marks yet.</strong><span>As soon as a judge scores an entry, its mark will appear here.</span></div>}
+            </div>
+            <div className="finalResultsDivider"><div><small>OFFICIAL RESULTS</small><strong>Final positions & prize points</strong><span>Use this section when judging is complete.</span></div><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div></div>
             <form className="resultForm" onSubmit={(e) => { e.preventDefault(); createResource("results", resultForm, () => setResultForm(emptyResult)); }}>
               <div className="resultField"><label>Programme</label><select value={resultForm.programmeId} onChange={(e) => { const programmeId=e.target.value; setResultForm({...resultForm,programmeId,participantId:"",teamId:""}); }} required><option value="">Choose programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name} · {p.type}</option>)}</select></div>
               <div className="resultField"><label>Entry</label>{programmes.find((p)=>p.id===resultForm.programmeId)?.type === "team" ? <select value={resultForm.teamId} onChange={(e)=>setResultForm({...resultForm,teamId:e.target.value})} required><option value="">Choose team</option>{teams.map((t)=><option key={t.id} value={t.id}>{t.name}</option>)}</select> : <select value={resultForm.participantId} onChange={(e)=>setResultForm({...resultForm,participantId:e.target.value})} required><option value="">Choose participant</option>{participants.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select>}</div>
