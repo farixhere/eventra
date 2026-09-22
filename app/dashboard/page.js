@@ -196,9 +196,9 @@ export default function Dashboard() {
 
   return (
     <main className="dashboardPage">
-      <header className="dashNav"><Link className="brand" href="/">eventra<span>.</span></Link><div><span className="statusDot"></span> Workspace</div><Link href="/">← Website</Link></header>
       <div className="dashShell">
         <aside className="sideNav">
+  <div className="sideBrand"><Link href="/" className="sideBrandLogo">eventra<span>.</span></Link></div>
   <div className="sideBrand"><span className="sideBrandMark">e</span><div><strong>Eventra</strong><small>EVENT CONTROL</small></div></div>
   <small>EVENT SETUP</small>
   {nav.slice(0,5).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span>{key === "events" ? <b>⌂</b> : key === "venues" ? <b>⌁</b> : key === "teams" ? <b>◌</b> : key === "participants" ? <b>◎</b> : <b>▦</b>}</button>)}
