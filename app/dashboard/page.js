@@ -57,6 +57,18 @@ export default function Dashboard() {
       const response = await fetch("/api/" + section + "?eventId=" + eventId, { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to load " + section);
+      if (section === "registrations") {
+        const [programmesResponse, participantsResponse, teamsResponse] = await Promise.all([
+          fetch("/api/programmes?eventId=" + eventId, { cache: "no-store" }),
+          fetch("/api/participants?eventId=" + eventId, { cache: "no-store" }),
+          fetch("/api/teams?eventId=" + eventId, { cache: "no-store" })
+        ]);
+        const [programmesData, participantsData, teamsData] = await Promise.all([programmesResponse.json(), participantsResponse.json(), teamsResponse.json()]);
+        if (!programmesResponse.ok || !participantsResponse.ok || !teamsResponse.ok) throw new Error("Unable to load registration options");
+        setProgrammes(programmesData.programmes || []);
+        setParticipants(participantsData.participants || []);
+        setTeams(teamsData.teams || []);
+      }
       if (section === "venues") setVenues(data.venues || []);
       if (section === "teams") setTeams(data.teams || []);
       if (section === "participants") setParticipants(data.participants || []);
