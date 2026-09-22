@@ -1,4 +1,4 @@
-import { getDb } from "../../../lib/db";
+import { getDb } from "../../../../lib/db";
 
 const DEFAULT_POINTS = [10, 7, 5, 3, 2, 1];
 
