@@ -6,7 +6,8 @@ import Link from "next/link";
 const emptyEvent = { name: "", description: "", startDate: "", endDate: "", location: "" };
 const emptyVenue = { name: "", location: "", capacity: "" };
 const emptyTeam = { name: "", code: "" };
-const emptyParticipant = { name: "", email: "", phone: "", participantCode: "", teamId: "" };\nconst emptyProgramme = { name: "", category: "", type: "individual", maxParticipants: "" };
+const emptyParticipant = { name: "", email: "", phone: "", participantCode: "", teamId: "" };
+const emptyProgramme = { name: "", category: "", type: "individual", maxParticipants: "" };
 
 function formatDate(value) {
   if (!value) return "Date not set";
@@ -19,11 +20,13 @@ export default function Dashboard() {
   const [section, setSection] = useState("events");
   const [venues, setVenues] = useState([]);
   const [teams, setTeams] = useState([]);
-  const [participants, setParticipants] = useState([]);\n  const [programmes, setProgrammes] = useState([]);
+  const [participants, setParticipants] = useState([]);
+  const [programmes, setProgrammes] = useState([]);
   const [eventForm, setEventForm] = useState(emptyEvent);
   const [venueForm, setVenueForm] = useState(emptyVenue);
   const [teamForm, setTeamForm] = useState(emptyTeam);
-  const [participantForm, setParticipantForm] = useState(emptyParticipant);\n  const [programmeForm, setProgrammeForm] = useState(emptyProgramme);
+  const [participantForm, setParticipantForm] = useState(emptyParticipant);
+  const [programmeForm, setProgrammeForm] = useState(emptyProgramme);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingSection, setLoadingSection] = useState(false);
@@ -53,7 +56,8 @@ export default function Dashboard() {
       if (!response.ok) throw new Error(data.error || "Unable to load " + section);
       if (section === "venues") setVenues(data.venues || []);
       if (section === "teams") setTeams(data.teams || []);
-      if (section === "participants") setParticipants(data.participants || []);\n      if (section === "programmes") setProgrammes(data.programmes || []);
+      if (section === "participants") setParticipants(data.participants || []);
+      if (section === "programmes") setProgrammes(data.programmes || []);
     } catch (err) { setError(err.message); }
     finally { setLoadingSection(false); }
   }
@@ -123,7 +127,7 @@ export default function Dashboard() {
           <div className="statGrid"><div className="stat"><small>Active events</small><strong>{events.filter((event) => event.status === "live").length.toString().padStart(2,"0")}</strong><span>{events.length} total events</span></div><div className="stat"><small>Participants</small><strong>{participantCount.toLocaleString()}</strong><span>In selected event</span></div><div className="stat"><small>Programmes</small><strong>{programmeCount}</strong><span>Coming next</span></div><div className="stat"><small>Results</small><strong>{resultCount}</strong><span>Published</span></div></div>
           {events.length > 0 && <div className="eventSelector"><label>MANAGING EVENT<select value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>{events.map((event) => <option key={event.id} value={event.id}>{event.name}</option>)}</select></label></div>}
 
-          {section === "events" && <div className="eventPanel"><div className="panelTop"><h2>Recent events</h2><button onClick={loadEvents}>Refresh →</button></div>{loading ? <div className="eventEmpty">Loading your events…</div> : events.length === 0 ? <div className="eventEmpty"><strong>No events yet.</strong><span>Create your first event to start building Eventra.</span><button onClick={() => setOpen(true)}>+ Create your first event</button></div> : events.map((event) => <button className={"eventRow eventRowButton " + (event.id === selectedId ? "eventRowActive" : "")} key={event.id} onClick={() => setSelectedId(event.id)}><div><strong>{event.name}</strong><span>{formatDate(event.start_date)} · {event.location || "Location not set"}</span></div><span className={"pill " + (event.status === "live" ? "live" : "")}>{event.status}</span><button type="button" className="eventDelete" onClick={(e) => { e.stopPropagation(); removeEvent(event.id, event.name); }}>Delete</button><span className="rowArrow">→</span></button>)}</div>}
+          {section === "events" && <div className="eventPanel"><div className="panelTop"><h2>Recent events</h2><button onClick={loadEvents}>Refresh →</button></div>{loading ? <div className="eventEmpty">Loading your events…</div> : events.length === 0 ? <div className="eventEmpty"><strong>No events yet.</strong><span>Create your first event to start building Eventra.</span><button onClick={() => setOpen(true)}>+ Create your first event</button></div> : events.map((event) => <button className={"eventRow eventRowButton " + (event.id === selectedId ? "eventRowActive" : "")} key={event.id} onClick={() => setSelectedId(event.id)}><div><strong>{event.name}</strong><span>{formatDate(event.start_date)} · {event.location || "Location not set"}</span></div><span className={"pill " + (event.status === "live" ? "live" : "")}>{event.status}</span><span className="eventDelete" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); removeEvent(event.id, event.name); }}>Delete</span><span className="rowArrow">→</span></button>)}</div>}
 
           {section !== "events" && !selectedEvent(events, selectedId) && <div className="eventEmpty"><strong>Create an event first.</strong><span>Resources belong to an event.</span></div>}
 
