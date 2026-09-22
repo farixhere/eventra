@@ -19,16 +19,29 @@ export async function POST(request) {
     let skipped = 0;
 
     for (const programme of programmes) {
-      const rows = await sql`
-        SELECT
-          s.participant_id,
-          s.team_id,
-          AVG(s.score)::numeric AS average_score
-        FROM scores s
-        WHERE s.programme_id = ${programme.id}
-        GROUP BY s.participant_id, s.team_id
-        ORDER BY average_score DESC
-      `;
+      const criteria = await sql`SELECT id FROM scoring_criteria WHERE programme_id = ${programme.id} ORDER BY sort_order ASC`;
+      let rows;
+      if (criteria.length) {
+        rows = await sql`
+          SELECT participant_id, team_id, AVG(judge_total)::numeric AS average_score
+          FROM (
+            SELECT s.judge_id, s.participant_id, s.team_id, SUM(s.score)::numeric AS judge_total
+            FROM scores s
+            WHERE s.programme_id = ${programme.id}
+            GROUP BY s.judge_id, s.participant_id, s.team_id
+          ) judged
+          GROUP BY participant_id, team_id
+          ORDER BY average_score DESC
+        `;
+      } else {
+        rows = await sql`
+          SELECT s.participant_id, s.team_id, AVG(s.score)::numeric AS average_score
+          FROM scores s
+          WHERE s.programme_id = ${programme.id}
+          GROUP BY s.participant_id, s.team_id
+          ORDER BY average_score DESC
+        `;
+      }
 
       if (!rows.length) continue;
 
@@ -46,7 +59,8 @@ export async function POST(request) {
           continue;
         }
 
-        const points = DEFAULT_POINTS[index] || 0;
+        const pointRule = await sql`SELECT points FROM programme_point_rules WHERE programme_id = ${programme.id} AND position = ${index + 1}`;
+        const points = pointRule[0] ? Number(pointRule[0].points) : (DEFAULT_POINTS[index] || 0);
         await sql`
           INSERT INTO results (programme_id, participant_id, team_id, position, total_score, points, published)
           VALUES (
