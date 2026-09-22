@@ -82,6 +82,20 @@ export default function Dashboard() {
     } catch (err) { setError(err.message); } finally { setSaving(false); }
   }
 
+  async function removeEvent(id, name) {
+    if (!window.confirm('Delete "' + name + '"? This will also delete its venues, teams, participants, programmes, schedules, judges, scores, results, and announcements.')) return;
+    setError("");
+    try {
+      const response = await fetch("/api/events?id=" + id, { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to delete event");
+      const nextEvents = events.filter((event) => event.id !== id);
+      setEvents(nextEvents);
+      setSelectedId(nextEvents[0]?.id || "");
+      setSection("events");
+    } catch (err) { setError(err.message); }
+  }
+
   async function removeResource(kind, id) {
     if (!window.confirm("Delete this " + kind.slice(0, -1) + "?")) return;
     setError("");
@@ -109,7 +123,7 @@ export default function Dashboard() {
           <div className="statGrid"><div className="stat"><small>Active events</small><strong>{events.filter((event) => event.status === "live").length.toString().padStart(2,"0")}</strong><span>{events.length} total events</span></div><div className="stat"><small>Participants</small><strong>{participantCount.toLocaleString()}</strong><span>In selected event</span></div><div className="stat"><small>Programmes</small><strong>{programmeCount}</strong><span>Coming next</span></div><div className="stat"><small>Results</small><strong>{resultCount}</strong><span>Published</span></div></div>
           {events.length > 0 && <div className="eventSelector"><label>MANAGING EVENT<select value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>{events.map((event) => <option key={event.id} value={event.id}>{event.name}</option>)}</select></label></div>}
 
-          {section === "events" && <div className="eventPanel"><div className="panelTop"><h2>Recent events</h2><button onClick={loadEvents}>Refresh →</button></div>{loading ? <div className="eventEmpty">Loading your events…</div> : events.length === 0 ? <div className="eventEmpty"><strong>No events yet.</strong><span>Create your first event to start building Eventra.</span><button onClick={() => setOpen(true)}>+ Create your first event</button></div> : events.map((event) => <button className={"eventRow eventRowButton " + (event.id === selectedId ? "eventRowActive" : "")} key={event.id} onClick={() => setSelectedId(event.id)}><div><strong>{event.name}</strong><span>{formatDate(event.start_date)} · {event.location || "Location not set"}</span></div><span className={"pill " + (event.status === "live" ? "live" : "")}>{event.status}</span><span className="rowArrow">→</span></button>)}</div>}
+          {section === "events" && <div className="eventPanel"><div className="panelTop"><h2>Recent events</h2><button onClick={loadEvents}>Refresh →</button></div>{loading ? <div className="eventEmpty">Loading your events…</div> : events.length === 0 ? <div className="eventEmpty"><strong>No events yet.</strong><span>Create your first event to start building Eventra.</span><button onClick={() => setOpen(true)}>+ Create your first event</button></div> : events.map((event) => <button className={"eventRow eventRowButton " + (event.id === selectedId ? "eventRowActive" : "")} key={event.id} onClick={() => setSelectedId(event.id)}><div><strong>{event.name}</strong><span>{formatDate(event.start_date)} · {event.location || "Location not set"}</span></div><span className={"pill " + (event.status === "live" ? "live" : "")}>{event.status}</span><button type="button" className="eventDelete" onClick={(e) => { e.stopPropagation(); removeEvent(event.id, event.name); }}>Delete</button><span className="rowArrow">→</span></button>)}</div>}
 
           {section !== "events" && !selectedEvent(events, selectedId) && <div className="eventEmpty"><strong>Create an event first.</strong><span>Resources belong to an event.</span></div>}
 
