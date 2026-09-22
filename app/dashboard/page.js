@@ -6,7 +6,7 @@ import Link from "next/link";
 const emptyEvent = { name: "", description: "", startDate: "", endDate: "", location: "" };
 const emptyVenue = { name: "", location: "", capacity: "" };
 const emptyTeam = { name: "", code: "" };
-const emptyParticipant = { name: "", email: "", phone: "", participantCode: "", teamId: "" };
+const emptyParticipant = { name: "", email: "", phone: "", participantCode: "", teamId: "" };\nconst emptyProgramme = { name: "", category: "", type: "individual", maxParticipants: "" };
 
 function formatDate(value) {
   if (!value) return "Date not set";
@@ -19,11 +19,11 @@ export default function Dashboard() {
   const [section, setSection] = useState("events");
   const [venues, setVenues] = useState([]);
   const [teams, setTeams] = useState([]);
-  const [participants, setParticipants] = useState([]);
+  const [participants, setParticipants] = useState([]);\n  const [programmes, setProgrammes] = useState([]);
   const [eventForm, setEventForm] = useState(emptyEvent);
   const [venueForm, setVenueForm] = useState(emptyVenue);
   const [teamForm, setTeamForm] = useState(emptyTeam);
-  const [participantForm, setParticipantForm] = useState(emptyParticipant);
+  const [participantForm, setParticipantForm] = useState(emptyParticipant);\n  const [programmeForm, setProgrammeForm] = useState(emptyProgramme);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingSection, setLoadingSection] = useState(false);
@@ -53,7 +53,7 @@ export default function Dashboard() {
       if (!response.ok) throw new Error(data.error || "Unable to load " + section);
       if (section === "venues") setVenues(data.venues || []);
       if (section === "teams") setTeams(data.teams || []);
-      if (section === "participants") setParticipants(data.participants || []);
+      if (section === "participants") setParticipants(data.participants || []);\n      if (section === "programmes") setProgrammes(data.programmes || []);
     } catch (err) { setError(err.message); }
     finally { setLoadingSection(false); }
   }
@@ -94,7 +94,7 @@ export default function Dashboard() {
   }
 
   const participantCount = participants.length;
-  const programmeCount = 0;
+  const programmeCount = programmes.length;
   const resultCount = 0;
   const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["schedules","Schedules"],["results","Results"],["certificates","Certificates"]];
 
@@ -116,6 +116,17 @@ export default function Dashboard() {
           {section === "venues" && selectedEvent(events, selectedId) && <ResourcePanel title="Venues" count={venues.length} hint="Where programmes happen." loading={loadingSection}><form className="inlineForm" onSubmit={(e) => { e.preventDefault(); createResource("venues", venueForm, () => setVenueForm(emptyVenue)); }}><input value={venueForm.name} onChange={(e) => setVenueForm({...venueForm,name:e.target.value})} placeholder="Venue name" required /><input value={venueForm.location} onChange={(e) => setVenueForm({...venueForm,location:e.target.value})} placeholder="Building / location" /><input type="number" min="1" value={venueForm.capacity} onChange={(e) => setVenueForm({...venueForm,capacity:e.target.value})} placeholder="Capacity" /><button disabled={saving}>+ Add venue</button></form><ResourceList items={venues} kind="venues" empty="No venues added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.location || "Location not set"} {item.capacity ? "· " + item.capacity + " capacity" : ""}</span></>} /></ResourcePanel>}
 
           {section === "teams" && selectedEvent(events, selectedId) && <ResourcePanel title="Teams" count={teams.length} hint="Groups competing in this event." loading={loadingSection}><form className="inlineForm" onSubmit={(e) => { e.preventDefault(); createResource("teams", teamForm, () => setTeamForm(emptyTeam)); }}><input value={teamForm.name} onChange={(e) => setTeamForm({...teamForm,name:e.target.value})} placeholder="Team name" required /><input value={teamForm.code} onChange={(e) => setTeamForm({...teamForm,code:e.target.value})} placeholder="Short code (optional)" /><button disabled={saving}>+ Add team</button></form><ResourceList items={teams} kind="teams" empty="No teams added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.code || "No code"}</span></>} /></ResourcePanel>}
+
+          {section === "programmes" && selectedEvent(events, selectedId) && <ResourcePanel title="Programmes" count={programmes.length} hint="Competitions and activities in this event." loading={loadingSection}>
+            <form className="programmeForm" onSubmit={(e) => { e.preventDefault(); createResource("programmes", programmeForm, () => setProgrammeForm(emptyProgramme)); }}>
+              <input value={programmeForm.name} onChange={(e) => setProgrammeForm({...programmeForm,name:e.target.value})} placeholder="Programme name" required />
+              <input value={programmeForm.category} onChange={(e) => setProgrammeForm({...programmeForm,category:e.target.value})} placeholder="Category" />
+              <select value={programmeForm.type} onChange={(e) => setProgrammeForm({...programmeForm,type:e.target.value})}><option value="individual">Individual</option><option value="team">Team</option></select>
+              <input type="number" min="1" value={programmeForm.maxParticipants} onChange={(e) => setProgrammeForm({...programmeForm,maxParticipants:e.target.value})} placeholder="Max participants" />
+              <button disabled={saving}>+ Add programme</button>
+            </form>
+            <ResourceList items={programmes} kind="programmes" empty="No programmes added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.category || "General"} · {item.type} {item.max_participants ? "· max " + item.max_participants : ""}</span></>} />
+          </ResourcePanel>}
 
           {section === "participants" && selectedEvent(events, selectedId) && <ResourcePanel title="Participants" count={participants.length} hint="People taking part in this event." loading={loadingSection}><form className="participantForm" onSubmit={(e) => { e.preventDefault(); createResource("participants", participantForm, () => setParticipantForm(emptyParticipant)); }}><input value={participantForm.name} onChange={(e) => setParticipantForm({...participantForm,name:e.target.value})} placeholder="Full name" required /><input type="email" value={participantForm.email} onChange={(e) => setParticipantForm({...participantForm,email:e.target.value})} placeholder="Email (optional)" /><input value={participantForm.phone} onChange={(e) => setParticipantForm({...participantForm,phone:e.target.value})} placeholder="Phone (optional)" /><select value={participantForm.teamId} onChange={(e) => setParticipantForm({...participantForm,teamId:e.target.value})}><option value="">No team</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select><input value={participantForm.participantCode} onChange={(e) => setParticipantForm({...participantForm,participantCode:e.target.value})} placeholder="Code (auto if blank)" /><button disabled={saving}>+ Add participant</button></form><ResourceList items={participants} kind="participants" empty="No participants added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.participant_code} {item.team_name ? "· " + item.team_name : "· No team"}</span></>} /></ResourcePanel>}
         </section>
