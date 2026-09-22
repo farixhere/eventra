@@ -193,16 +193,23 @@ export default function Dashboard() {
             <ResourceList items={registrations} kind="registrations" empty="No registrations yet." onDelete={removeResource} render={(item) => <><strong>{item.programme_name}</strong><span>{item.programme_type === "team" ? item.team_name : item.participant_name} · {item.status}</span></>} />
           </ResourcePanel>}
 
-          {section === "schedules" && selectedEvent(events, selectedId) && <ResourcePanel title="Schedules" count={scheduleCount} hint="Plan where and when each programme happens." loading={loadingSection}>
+          {section === "schedules" && selectedEvent(events, selectedId) && <div className="schedulePanel">
+            <div className="scheduleHeader"><div><small>EVENT MANAGEMENT</small><h2>Schedule</h2><p>Build the running order for your event.</p></div><div className="scheduleHeaderMeta"><strong>{scheduleCount.toString().padStart(2,"0")}</strong><span>scheduled</span></div></div>
             <form className="scheduleForm" onSubmit={(e) => { e.preventDefault(); createResource("schedules", scheduleForm, () => setScheduleForm(emptySchedule)); }}>
-              <select value={scheduleForm.programmeId} onChange={(e) => setScheduleForm({...scheduleForm,programmeId:e.target.value})} required><option value="">Select programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select>
-              <select value={scheduleForm.venueId} onChange={(e) => setScheduleForm({...scheduleForm,venueId:e.target.value})}><option value="">No venue</option>{venues.map((v)=><option key={v.id} value={v.id}>{v.name}</option>)}</select>
-              <label>Start<input type="datetime-local" value={scheduleForm.startsAt} onChange={(e) => setScheduleForm({...scheduleForm,startsAt:e.target.value})} required /></label>
-              <label>End<input type="datetime-local" value={scheduleForm.endsAt} onChange={(e) => setScheduleForm({...scheduleForm,endsAt:e.target.value})} required /></label>
-              <button disabled={saving}>+ Add schedule</button>
+              <div className="scheduleField"><label>Programme</label><select value={scheduleForm.programmeId} onChange={(e) => setScheduleForm({...scheduleForm,programmeId:e.target.value})} required><option value="">Choose programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+              <div className="scheduleField"><label>Venue</label><select value={scheduleForm.venueId} onChange={(e) => setScheduleForm({...scheduleForm,venueId:e.target.value})}><option value="">No venue</option>{venues.map((v)=><option key={v.id} value={v.id}>{v.name}</option>)}</select></div>
+              <div className="scheduleField"><label>Starts</label><input type="datetime-local" value={scheduleForm.startsAt} onChange={(e) => setScheduleForm({...scheduleForm,startsAt:e.target.value})} required /></div>
+              <div className="scheduleField"><label>Ends</label><input type="datetime-local" value={scheduleForm.endsAt} onChange={(e) => setScheduleForm({...scheduleForm,endsAt:e.target.value})} required /></div>
+              <button disabled={saving}>{saving ? "Adding…" : "+ Add to schedule"}</button>
             </form>
-            <ResourceList items={schedules} kind="schedules" empty="No schedules yet." onDelete={removeResource} render={(item) => <><strong>{item.programme_name}</strong><span>{item.venue_name || "No venue"} · {new Date(item.starts_at).toLocaleString()} → {new Date(item.ends_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span></>} />
-          </ResourcePanel>}
+            {loadingSection ? <div className="eventEmpty">Loading schedule…</div> : !schedules.length ? <div className="eventEmpty"><strong>No schedule entries yet.</strong><span>Add your first programme to start building the event timetable.</span></div> : <div className="scheduleList">
+              {schedules.map((item) => <div className="scheduleRow" key={item.id}>
+                <div className="scheduleTime"><strong>{new Date(item.starts_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong><span>{new Date(item.ends_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span></div>
+                <div className="scheduleInfo"><strong>{item.programme_name}</strong><span>{item.venue_name || "Venue not assigned"}{item.programme_category ? " · " + item.programme_category : ""}</span></div>
+                <button className="scheduleDelete" onClick={() => removeResource("schedules", item.id)}>Delete</button>
+              </div>)}
+            </div>}
+          </div>}
 
           {section === "participants" && selectedEvent(events, selectedId) && <ResourcePanel title="Participants" count={participants.length} hint="People taking part in this event." loading={loadingSection}><form className="participantForm" onSubmit={(e) => { e.preventDefault(); createResource("participants", participantForm, () => setParticipantForm(emptyParticipant)); }}><input value={participantForm.name} onChange={(e) => setParticipantForm({...participantForm,name:e.target.value})} placeholder="Full name" required /><input type="email" value={participantForm.email} onChange={(e) => setParticipantForm({...participantForm,email:e.target.value})} placeholder="Email (optional)" /><input value={participantForm.phone} onChange={(e) => setParticipantForm({...participantForm,phone:e.target.value})} placeholder="Phone (optional)" /><select value={participantForm.teamId} onChange={(e) => setParticipantForm({...participantForm,teamId:e.target.value})}><option value="">No team</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select><input value={participantForm.participantCode} onChange={(e) => setParticipantForm({...participantForm,participantCode:e.target.value})} placeholder="Code (auto if blank)" /><button disabled={saving}>+ Add participant</button></form><ResourceList items={participants} kind="participants" empty="No participants added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.participant_code} {item.team_name ? "· " + item.team_name : "· No team"}</span></>} /></ResourcePanel>}
         </section>
