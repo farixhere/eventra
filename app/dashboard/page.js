@@ -173,6 +173,23 @@ export default function Dashboard() {
     } catch (err) { setError(err.message); }
   }
 
+  async function generateDraftResults() {
+    if (!selectedId) return;
+    if (!window.confirm("Generate draft results from the current judge scores? Existing results will be kept.")) return;
+    setSaving(true); setError("");
+    try {
+      const response = await fetch("/api/results/auto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: selectedId })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to generate draft results");
+      await loadSectionData();
+      window.alert(data.message + " " + data.created + " created, " + data.skipped + " already existed.");
+    } catch (err) { setError(err.message); } finally { setSaving(false); }
+  }
+
   async function removeResource(kind, id) {
     if (!window.confirm("Delete this " + kind.slice(0, -1) + "?")) return;
     setError("");
@@ -336,7 +353,7 @@ export default function Dashboard() {
           </div>}
 
           {section === "results" && selectedEvent(events, selectedId) && <div className="resultPanel">
-            <div className="resultHeader"><div><small>EVENT MANAGEMENT</small><h2>Results</h2><p>Record positions, scores and publish the final standings.</p></div><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div></div>
+            <div className="resultHeader"><div><small>EVENT MANAGEMENT</small><h2>Results</h2><p>Record positions, scores and publish the final standings.</p></div><div className="resultHeaderTools"><button className="resultAutoButton" type="button" onClick={generateDraftResults} disabled={saving}>✦ Generate drafts</button><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div></div></div>
             <form className="resultForm" onSubmit={(e) => { e.preventDefault(); createResource("results", resultForm, () => setResultForm(emptyResult)); }}>
               <div className="resultField"><label>Programme</label><select value={resultForm.programmeId} onChange={(e) => { const programmeId=e.target.value; setResultForm({...resultForm,programmeId,participantId:"",teamId:""}); }} required><option value="">Choose programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name} · {p.type}</option>)}</select></div>
               <div className="resultField"><label>Entry</label>{programmes.find((p)=>p.id===resultForm.programmeId)?.type === "team" ? <select value={resultForm.teamId} onChange={(e)=>setResultForm({...resultForm,teamId:e.target.value})} required><option value="">Choose team</option>{teams.map((t)=><option key={t.id} value={t.id}>{t.name}</option>)}</select> : <select value={resultForm.participantId} onChange={(e)=>setResultForm({...resultForm,participantId:e.target.value})} required><option value="">Choose participant</option>{participants.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select>}</div>
