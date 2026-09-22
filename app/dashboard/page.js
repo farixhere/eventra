@@ -11,6 +11,7 @@ const emptyProgramme = { name: "", category: "", type: "individual", maxParticip
 const emptyRegistration = { programmeId: "", participantId: "", teamId: "" };
 const emptySchedule = { programmeId: "", venueId: "", startsAt: "", endsAt: "" };
 const emptyResult = { programmeId: "", participantId: "", teamId: "", position: "", totalScore: "", points: "", published: false };
+const emptyJudge = { name: "", email: "" };
 
 function formatDate(value) {
   if (!value) return "Date not set";
@@ -28,8 +29,10 @@ export default function Dashboard() {
   const [registrations, setRegistrations] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [results, setResults] = useState([]);
+  const [judges, setJudges] = useState([]);
   const [scheduleForm, setScheduleForm] = useState(emptySchedule);
   const [resultForm, setResultForm] = useState(emptyResult);
+  const [judgeForm, setJudgeForm] = useState(emptyJudge);
   const [eventForm, setEventForm] = useState(emptyEvent);
   const [venueForm, setVenueForm] = useState(emptyVenue);
   const [teamForm, setTeamForm] = useState(emptyTeam);
@@ -80,6 +83,7 @@ export default function Dashboard() {
       if (section === "participants") setParticipants(data.participants || []);
       if (section === "programmes") setProgrammes(data.programmes || []);
       if (section === "registrations") setRegistrations(data.registrations || []);
+      if (section === "judges") setJudges(data.judges || []);
       if (section === "results") {
         setResults(data.results || []);
         const [programmesResponse, participantsResponse, teamsResponse] = await Promise.all([
@@ -162,7 +166,8 @@ export default function Dashboard() {
   const resultCount = results.filter((item) => item.published).length;
   const registrationCount = registrations.length;
   const scheduleCount = schedules.length;
-  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["results","Results"],["certificates","Certificates"]];
+  const judgeCount = judges.length;
+  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["judges","Judges"],["results","Results"],["certificates","Certificates"]];
 
   return (
     <main className="dashboardPage">
@@ -226,6 +231,15 @@ export default function Dashboard() {
               </div>)}
             </div>}
           </div>}
+
+          {section === "judges" && selectedEvent(events, selectedId) && <ResourcePanel title="Judges" count={judges.length} hint="Officials who can score programmes in this event." loading={loadingSection}>
+            <form className="judgeForm" onSubmit={(e) => { e.preventDefault(); createResource("judges", judgeForm, () => setJudgeForm(emptyJudge)); }}>
+              <input value={judgeForm.name} onChange={(e) => setJudgeForm({...judgeForm,name:e.target.value})} placeholder="Judge name" required />
+              <input type="email" value={judgeForm.email} onChange={(e) => setJudgeForm({...judgeForm,email:e.target.value})} placeholder="Email (optional)" />
+              <button disabled={saving}>{saving ? "Adding…" : "+ Add judge"}</button>
+            </form>
+            <ResourceList items={judges} kind="judges" empty="No judges added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.email || "No email added"}</span></>} />
+          </ResourcePanel>}
 
           {section === "results" && selectedEvent(events, selectedId) && <div className="resultPanel">
             <div className="resultHeader"><div><small>EVENT MANAGEMENT</small><h2>Results</h2><p>Record positions, scores and publish the final standings.</p></div><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div></div>
