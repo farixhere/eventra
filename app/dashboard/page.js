@@ -184,7 +184,7 @@ export default function Dashboard() {
   <small className="space">OPERATIONS</small>
   {nav.slice(5,8).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "registrations" ? "↳" : key === "schedules" ? "◷" : key === "judges" ? "♢" : "✦"}</b></button>)}
   <small className="space">RESULTS & DOCUMENTS</small>
-  {nav.slice(8).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "leaderboard" ? "↟" : key === "results" ? "◈" : "□"}</b></button>)}
+  {nav.slice(8).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "results" ? "◈" : "□"}</b></button>)}
   <div className="sideBottom"><button>⚙ <span>Settings</span></button><Link href="/">↗ <span>View website</span></Link></div>
 </aside>
         <section className="workspace">
