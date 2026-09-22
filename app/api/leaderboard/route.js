@@ -10,6 +10,7 @@ export async function GET(request) {
         t.id AS team_id,
         t.name AS team_name,
         t.code AS team_code,
+        COALESCE(SUM(CASE WHEN r.published THEN COALESCE(r.total_score, 0) ELSE 0 END), 0) AS total_marks,
         COALESCE(SUM(CASE WHEN r.published THEN COALESCE(r.points, 0) ELSE 0 END), 0) AS total_points,
         COUNT(DISTINCT CASE WHEN r.published THEN r.id END) AS result_count,
         COUNT(DISTINCT CASE WHEN r.published AND r.position = 1 THEN r.id END) AS first_places,
