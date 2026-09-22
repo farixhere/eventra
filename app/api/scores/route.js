@@ -6,9 +6,10 @@ export async function GET(request) {
     if (!eventId) return Response.json({ error: "eventId is required" }, { status: 400 });
     const sql = getDb();
     const scores = await sql`
-      SELECT s.id, s.programme_id, s.judge_id, s.participant_id, s.team_id, s.score, s.notes, s.created_at,
+      SELECT s.id, s.programme_id, s.judge_id, s.participant_id, s.team_id, s.criterion_id, s.score, s.notes, s.created_at,
              p.name AS programme_name, p.type AS programme_type,
              j.name AS judge_name,
+             sc.name AS criterion_name, sc.max_score AS criterion_max_score,
              COALESCE(part.name, team.name) AS entry_name,
              team.name AS team_name
       FROM scores s
@@ -16,6 +17,7 @@ export async function GET(request) {
       JOIN judges j ON j.id = s.judge_id
       LEFT JOIN participants part ON part.id = s.participant_id
       LEFT JOIN teams team ON team.id = s.team_id
+      LEFT JOIN scoring_criteria sc ON sc.id = s.criterion_id
       WHERE p.event_id = ${eventId}
       ORDER BY p.name ASC, s.score DESC, s.created_at ASC
     `;
@@ -44,8 +46,14 @@ export async function POST(request) {
 
     const participantId = body.participantId || null;
     const teamId = body.teamId || null;
+    const criterionId = body.criterionId || null;
     if (programmes[0].type === "team" && !teamId) return Response.json({ error: "Select a team" }, { status: 400 });
     if (programmes[0].type === "individual" && !participantId) return Response.json({ error: "Select a participant" }, { status: 400 });
+    if (criterionId) {
+      const criterion = await sql`SELECT id, max_score FROM scoring_criteria WHERE id = ${criterionId} AND programme_id = ${body.programmeId}`;
+      if (!criterion[0]) return Response.json({ error: "Scoring criterion not found" }, { status: 404 });
+      if (score > Number(criterion[0].max_score)) return Response.json({ error: "Score cannot exceed " + criterion[0].max_score }, { status: 400 });
+    }
 
     if (participantId) {
       const participant = await sql`SELECT id FROM participants WHERE id = ${participantId} AND event_id = ${body.eventId}`;
@@ -62,13 +70,14 @@ export async function POST(request) {
         AND judge_id = ${body.judgeId}
         AND COALESCE(participant_id::text, '') = COALESCE(${participantId}::text, '')
         AND COALESCE(team_id::text, '') = COALESCE(${teamId}::text, '')
+        AND COALESCE(criterion_id::text, '') = COALESCE(${criterionId}::text, '')
     `;
     if (duplicate[0]) return Response.json({ error: "This judge has already scored this entry" }, { status: 409 });
 
     const rows = await sql`
-      INSERT INTO scores (programme_id, judge_id, participant_id, team_id, score, notes)
-      VALUES (${body.programmeId}, ${body.judgeId}, ${participantId}, ${teamId}, ${score}, ${body.notes?.trim() || null})
-      RETURNING id, programme_id, judge_id, participant_id, team_id, score, notes, created_at
+      INSERT INTO scores (programme_id, judge_id, participant_id, team_id, criterion_id, score, notes)
+      VALUES (${body.programmeId}, ${body.judgeId}, ${participantId}, ${teamId}, ${criterionId}, ${score}, ${body.notes?.trim() || null})
+      RETURNING id, programme_id, judge_id, participant_id, team_id, criterion_id, score, notes, created_at
     `;
     return Response.json({ score: rows[0] }, { status: 201 });
   } catch (error) {
