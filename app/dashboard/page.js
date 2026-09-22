@@ -33,7 +33,6 @@ export default function Dashboard() {
   const [registrations, setRegistrations] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [results, setResults] = useState([]);
-  const [liveMarks, setLiveMarks] = useState([]);
   const [judges, setJudges] = useState([]);
   const [scores, setScores] = useState([]);
   const [criteria, setCriteria] = useState([]);
@@ -120,7 +119,6 @@ export default function Dashboard() {
       }
       if (section === "results") {
         setResults(data.results || []);
-        setLiveMarks(data.liveMarks || []);
         const [programmesResponse, participantsResponse, teamsResponse] = await Promise.all([
           fetch("/api/programmes?eventId=" + eventId, { cache: "no-store" }),
           fetch("/api/participants?eventId=" + eventId, { cache: "no-store" }),
@@ -185,22 +183,6 @@ export default function Dashboard() {
     } catch (err) { setError(err.message); }
   }
 
-  async function generateDraftResults() {
-    if (!selectedId) return;
-    if (!window.confirm("Generate draft results from the current judge scores? Existing results will be kept.")) return;
-    setSaving(true); setError("");
-    try {
-      const response = await fetch("/api/results/auto", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: selectedId })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Unable to generate draft results");
-      await loadSectionData();
-      window.alert(data.message + " " + data.created + " created, " + data.skipped + " already existed.");
-    } catch (err) { setError(err.message); } finally { setSaving(false); }
-  }
 
   async function removeResource(kind, id) {
     if (!window.confirm("Delete this " + kind.slice(0, -1) + "?")) return;
@@ -216,7 +198,6 @@ export default function Dashboard() {
   const participantCount = participants.length;
   const programmeCount = programmes.length;
   const resultCount = results.filter((item) => item.published).length;
-  const liveMarkCount = liveMarks.length;
   const registrationCount = registrations.length;
   const scheduleCount = schedules.length;
   const judgeCount = judges.length;
@@ -369,31 +350,22 @@ export default function Dashboard() {
           </div>}
 
           {section === "results" && selectedEvent(events, selectedId) && <div className="resultPanel">
-            <div className="resultHeader"><div><small>RESULTS FEED</small><h2>Results</h2><p>Judge marks appear here automatically. Final positions and prize points are published separately.</p></div><div className="resultHeaderTools"><div className="resultHeaderMeta"><strong>{liveMarkCount.toString().padStart(2,"0")}</strong><span>entries scored</span></div></div></div>
-            <div className="liveMarksPanel">
-              <div className="liveMarksHead"><div><small>LIVE JUDGE MARKS</small><strong>Individual scores</strong><span>Every person's current mark is shown here as soon as a judge submits it.</span></div><span>{liveMarkCount} entries</span></div>
-              {liveMarkCount ? <div className="liveMarksList">{liveMarks.map((item) => <div className="liveMarkRow" key={item.programme_id + ":" + (item.participant_id || item.team_id)}>
-                <div className="liveMarkScore"><strong>{Number(item.total_score).toFixed(2).replace(/\.00$/,"")}</strong><span>mark</span></div>
-                <div className="liveMarkInfo"><strong>{item.entry_name}</strong><span>{item.programme_name}{item.team_name ? " · " + item.team_name : ""}</span></div>
-                <div className="liveMarkMeta"><strong>{item.judges_count}</strong><span>{item.judges_count === 1 ? "judge" : "judges"}</span></div>
-                <div className="liveMarkStatus">Live</div>
-              </div>)}</div> : <div className="eventEmpty"><strong>No judge marks yet.</strong><span>As soon as a judge scores an entry, its mark will appear here.</span></div>}
-            </div>
-            <div className="finalResultsDivider"><div><small>OFFICIAL RESULTS</small><strong>Final positions & prize points</strong><span>Use this section when judging is complete.</span></div><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div></div>
-            <form className="resultForm" onSubmit={(e) => { e.preventDefault(); createResource("results", resultForm, () => setResultForm(emptyResult)); }}>
+            <div className="resultHeader"><div><small>EVENT MANAGEMENT</small><h2>Results</h2><p>Manually add final results, then publish them to the public event website.</p></div><div className="resultHeaderTools"><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div><button type="button" className="resultManualButton" onClick={() => setOpen((value) => !value)}>+ Manual result</button></div></div>
+            {open && <form className="resultForm" onSubmit={async (e) => { e.preventDefault(); setSaving(true); setError(""); try { const response = await fetch("/api/results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...resultForm, eventId: selectedId, published: false }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to create result"); setResultForm(emptyResult); setOpen(false); await loadSectionData(); } catch (err) { setError(err.message); } finally { setSaving(false); } }}>
               <div className="resultField"><label>Programme</label><select value={resultForm.programmeId} onChange={(e) => { const programmeId=e.target.value; setResultForm({...resultForm,programmeId,participantId:"",teamId:""}); }} required><option value="">Choose programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name} · {p.type}</option>)}</select></div>
               <div className="resultField"><label>Entry</label>{programmes.find((p)=>p.id===resultForm.programmeId)?.type === "team" ? <select value={resultForm.teamId} onChange={(e)=>setResultForm({...resultForm,teamId:e.target.value})} required><option value="">Choose team</option>{teams.map((t)=><option key={t.id} value={t.id}>{t.name}</option>)}</select> : <select value={resultForm.participantId} onChange={(e)=>setResultForm({...resultForm,participantId:e.target.value})} required><option value="">Choose participant</option>{participants.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select>}</div>
               <div className="resultField"><label>Position</label><input type="number" min="1" value={resultForm.position} onChange={(e)=>setResultForm({...resultForm,position:e.target.value})} placeholder="1" required /></div>
               <div className="resultField"><label>Total score</label><input type="number" min="0" step="0.01" value={resultForm.totalScore} onChange={(e)=>setResultForm({...resultForm,totalScore:e.target.value})} placeholder="0" /></div>
-              <div className="resultField"><label>Points</label><input type="number" min="0" step="0.01" value={resultForm.points} onChange={(e)=>setResultForm({...resultForm,points:e.target.value})} placeholder="0" /></div>
-              <label className="resultPublish"><input type="checkbox" checked={resultForm.published} onChange={(e)=>setResultForm({...resultForm,published:e.target.checked})} /> Publish</label>
-              <button disabled={saving}>{saving ? "Saving…" : "+ Add result"}</button>
-            </form>
-            {loadingSection ? <div className="eventEmpty">Loading results…</div> : !results.length ? <div className="eventEmpty"><strong>No results yet.</strong><span>Add a result after judging is complete for a programme.</span></div> : <div className="resultList">
+              <div className="resultField"><label>Prize points</label><input type="number" min="0" step="0.01" value={resultForm.points} onChange={(e)=>setResultForm({...resultForm,points:e.target.value})} placeholder="0" /></div>
+              <button disabled={saving}>{saving ? "Saving…" : "Save result"}</button>
+            </form>}
+            {loadingSection ? <div className="eventEmpty">Loading results…</div> : !results.length ? <div className="eventEmpty"><strong>No results yet.</strong><span>Click “Manual result” to add a final result.</span></div> : <div className="resultList">
               {results.map((item) => <div className="resultRow" key={item.id}>
                 <div className="resultPosition"><strong>#{item.position}</strong><span>{item.published ? "Published" : "Draft"}</span></div>
                 <div className="resultInfo"><strong>{item.entry_name}</strong><span>{item.programme_name}{item.team_name ? " · " + item.team_name : ""}</span></div>
                 <div className="resultScore"><strong>{item.total_score ?? "—"}</strong><span>{item.points ?? "0"} pts</span></div>
+                {!item.published && <button className="resultPublishButton" onClick={async () => { setSaving(true); setError(""); try { const response = await fetch("/api/results", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: item.id, published: true }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to publish result"); await loadSectionData(); } catch (err) { setError(err.message); } finally { setSaving(false); } }}>Publish</button>}
+                {item.published && <span className="resultPublishedLabel">Live on website</span>}
                 <button className="resultDelete" onClick={() => removeResource("results", item.id)}>Delete</button>
               </div>)}
             </div>}
