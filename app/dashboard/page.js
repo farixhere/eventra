@@ -348,7 +348,7 @@ export default function Dashboard() {
                 <div className="leaderboardRank"><strong>{index + 1}</strong><span>{index === 0 ? "1st" : index === 1 ? "2nd" : index === 2 ? "3rd" : "Rank"}</span></div>
                 <div className="leaderboardTeam"><strong>{item.team_name}</strong><span>{item.team_code || "No code"} · {item.result_count} published result{Number(item.result_count) === 1 ? "" : "s"}</span></div>
                 <div className="leaderboardPlaces"><span>1st {item.first_places}</span><span>2nd {item.second_places}</span><span>3rd {item.third_places}</span></div>
-                <div className="leaderboardPoints"><strong>{item.total_points}</strong><span>points</span></div>
+                <div className="leaderboardMarks"><strong>{Number(item.total_marks || 0).toFixed(2)}</strong><span>marks</span></div><div className="leaderboardPoints"><strong>{item.total_points}</strong><span>prize pts</span></div>
               </div>)}
             </div>}
           </div>}
