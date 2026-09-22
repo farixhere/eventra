@@ -19,42 +19,7 @@ export async function GET(request) {
       ORDER BY r.published DESC, r.position ASC, r.created_at ASC
     `;
 
-    // Live marks are calculated directly from judge scores, so a person's
-    // marks appear in the Results feed as soon as judging data is saved.
-    const liveMarks = await sql`
-      WITH judged AS (
-        SELECT
-          s.programme_id,
-          s.participant_id,
-          s.team_id,
-          s.judge_id,
-          SUM(s.score)::numeric AS judge_total,
-          COUNT(*)::integer AS criteria_scored
-        FROM scores s
-        JOIN programmes p ON p.id = s.programme_id
-        WHERE p.event_id = ${eventId}
-        GROUP BY s.programme_id, s.participant_id, s.team_id, s.judge_id
-      )
-      SELECT
-        programme_id,
-        participant_id,
-        team_id,
-        COUNT(*)::integer AS judges_count,
-        SUM(criteria_scored)::integer AS marks_count,
-        AVG(judge_total)::numeric AS total_score,
-        p.name AS programme_name,
-        p.type AS programme_type,
-        COALESCE(part.name, team.name) AS entry_name,
-        team.name AS team_name
-      FROM judged
-      JOIN programmes p ON p.id = judged.programme_id
-      LEFT JOIN participants part ON part.id = judged.participant_id
-      LEFT JOIN teams team ON team.id = judged.team_id
-      GROUP BY programme_id, participant_id, team_id, p.name, p.type, part.name, team.name
-      ORDER BY p.name ASC, total_score DESC, entry_name ASC
-    `;
-
-    return Response.json({ results, liveMarks });
+    return Response.json({ results });
   } catch (error) {
     console.error("GET /api/results failed", error);
     return Response.json({ error: "Unable to load results" }, { status: 500 });
@@ -86,6 +51,25 @@ export async function POST(request) {
   } catch (error) {
     console.error("POST /api/results failed", error);
     return Response.json({ error: "Unable to create result" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request) {
+  try {
+    const body = await request.json();
+    if (!body.id) return Response.json({ error: "id is required" }, { status: 400 });
+    const sql = getDb();
+    const rows = await sql`
+      UPDATE results
+      SET published = ${Boolean(body.published)}
+      WHERE id = ${body.id}
+      RETURNING id, programme_id, participant_id, team_id, position, total_score, points, published, created_at
+    `;
+    if (!rows[0]) return Response.json({ error: "Result not found" }, { status: 404 });
+    return Response.json({ result: rows[0] });
+  } catch (error) {
+    console.error("PATCH /api/results failed", error);
+    return Response.json({ error: "Unable to update result" }, { status: 500 });
   }
 }
 
