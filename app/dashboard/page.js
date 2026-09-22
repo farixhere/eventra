@@ -13,6 +13,7 @@ const emptySchedule = { programmeId: "", venueId: "", startsAt: "", endsAt: "" }
 const emptyResult = { programmeId: "", participantId: "", teamId: "", position: "", totalScore: "", points: "", published: false };
 const emptyJudge = { name: "", email: "" };
 const emptyScore = { programmeId: "", judgeId: "", participantId: "", teamId: "", score: "", notes: "" };
+const emptyLeaderboard = [];
 
 function formatDate(value) {
   if (!value) return "Date not set";
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const [results, setResults] = useState([]);
   const [judges, setJudges] = useState([]);
   const [scores, setScores] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [scheduleForm, setScheduleForm] = useState(emptySchedule);
   const [resultForm, setResultForm] = useState(emptyResult);
   const [judgeForm, setJudgeForm] = useState(emptyJudge);
@@ -87,6 +89,7 @@ export default function Dashboard() {
       if (section === "programmes") setProgrammes(data.programmes || []);
       if (section === "registrations") setRegistrations(data.registrations || []);
       if (section === "judges") setJudges(data.judges || []);
+      if (section === "leaderboard") setLeaderboard(data.leaderboard || []);
       if (section === "scores") {
         setScores(data.scores || []);
         const [programmesResponse, participantsResponse, teamsResponse, judgesResponse] = await Promise.all([
@@ -186,7 +189,7 @@ export default function Dashboard() {
   const scheduleCount = schedules.length;
   const judgeCount = judges.length;
   const scoreCount = scores.length;
-  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["judges","Judges"],["scores","Scoring"],["results","Results"],["certificates","Certificates"]];
+  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["judges","Judges"],["scores","Scoring"],["leaderboard","Leaderboard"],["results","Results"],["certificates","Certificates"]];
 
   return (
     <main className="dashboardPage">
@@ -271,6 +274,18 @@ export default function Dashboard() {
               <button disabled={saving}>{saving ? "Saving…" : "+ Save score"}</button>
             </form>
             {loadingSection ? <div className="eventEmpty">Loading scores…</div> : !scores.length ? <div className="eventEmpty"><strong>No scores yet.</strong><span>Add judges and programmes, then record the first score.</span></div> : <div className="scoreList">{scores.map((item)=><div className="scoreRow" key={item.id}><div className="scoreValue"><strong>{item.score}</strong><span>points</span></div><div className="scoreInfo"><strong>{item.entry_name}</strong><span>{item.programme_name} · Judge: {item.judge_name}{item.team_name ? " · " + item.team_name : ""}</span></div><div className="scoreNote">{item.notes || "No note"}</div><button className="scoreDelete" onClick={()=>removeResource("scores",item.id)}>Delete</button></div>)}</div>}
+          </div>}
+
+          {section === "leaderboard" && selectedEvent(events, selectedId) && <div className="leaderboardPanel">
+            <div className="leaderboardHeader"><div><small>COMPETITION ENGINE</small><h2>Leaderboard</h2><p>See how teams are performing across published results.</p></div><div className="leaderboardHeaderMeta"><strong>{leaderboard.length.toString().padStart(2,"0")}</strong><span>teams</span></div></div>
+            {loadingSection ? <div className="eventEmpty">Loading leaderboard…</div> : !leaderboard.length ? <div className="eventEmpty"><strong>No leaderboard data yet.</strong><span>Publish results with points to start ranking teams.</span></div> : <div className="leaderboardList">
+              {leaderboard.map((item, index) => <div className={"leaderboardRow " + (index < 3 ? "leaderboardTop" : "")} key={item.team_id}>
+                <div className="leaderboardRank"><strong>{index + 1}</strong><span>{index === 0 ? "1st" : index === 1 ? "2nd" : index === 2 ? "3rd" : "Rank"}</span></div>
+                <div className="leaderboardTeam"><strong>{item.team_name}</strong><span>{item.team_code || "No code"} · {item.result_count} published result{Number(item.result_count) === 1 ? "" : "s"}</span></div>
+                <div className="leaderboardPlaces"><span>1st {item.first_places}</span><span>2nd {item.second_places}</span><span>3rd {item.third_places}</span></div>
+                <div className="leaderboardPoints"><strong>{item.total_points}</strong><span>points</span></div>
+              </div>)}
+            </div>}
           </div>}
 
           {section === "results" && selectedEvent(events, selectedId) && <div className="resultPanel">
