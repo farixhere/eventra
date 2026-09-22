@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [judges, setJudges] = useState([]);
   const [scores, setScores] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [certificates, setCertificates] = useState([]);
   const [scheduleForm, setScheduleForm] = useState(emptySchedule);
   const [resultForm, setResultForm] = useState(emptyResult);
   const [judgeForm, setJudgeForm] = useState(emptyJudge);
@@ -90,6 +91,7 @@ export default function Dashboard() {
       if (section === "registrations") setRegistrations(data.registrations || []);
       if (section === "judges") setJudges(data.judges || []);
       if (section === "leaderboard") setLeaderboard(data.leaderboard || []);
+      if (section === "certificates") setCertificates(data.certificates || []);
       if (section === "scores") {
         setScores(data.scores || []);
         const [programmesResponse, participantsResponse, teamsResponse, judgesResponse] = await Promise.all([
@@ -189,6 +191,7 @@ export default function Dashboard() {
   const scheduleCount = schedules.length;
   const judgeCount = judges.length;
   const scoreCount = scores.length;
+  const certificateCount = certificates.length;
   const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["judges","Judges"],["scores","Scoring"],["leaderboard","Leaderboard"],["results","Results"],["certificates","Certificates"]];
 
   return (
@@ -284,6 +287,18 @@ export default function Dashboard() {
                 <div className="leaderboardTeam"><strong>{item.team_name}</strong><span>{item.team_code || "No code"} · {item.result_count} published result{Number(item.result_count) === 1 ? "" : "s"}</span></div>
                 <div className="leaderboardPlaces"><span>1st {item.first_places}</span><span>2nd {item.second_places}</span><span>3rd {item.third_places}</span></div>
                 <div className="leaderboardPoints"><strong>{item.total_points}</strong><span>points</span></div>
+              </div>)}
+            </div>}
+          </div>}
+
+          {section === "certificates" && selectedEvent(events, selectedId) && <div className="certificatePanel">
+            <div className="certificateHeader"><div><small>EVENT DOCUMENTS</small><h2>Certificates</h2><p>Prepare certificates from published event results.</p></div><div className="certificateHeaderMeta"><strong>{certificateCount.toString().padStart(2,"0")}</strong><span>eligible</span></div></div>
+            {loadingSection ? <div className="eventEmpty">Loading certificates…</div> : !certificates.length ? <div className="eventEmpty"><strong>No certificates ready yet.</strong><span>Publish results first. Eligible participants and teams will appear here.</span></div> : <div className="certificateList">
+              {certificates.map((item) => <div className="certificateRow" key={item.id}>
+                <div className="certificateBadge">CERT</div>
+                <div className="certificateInfo"><strong>{item.recipient_name}</strong><span>{item.programme_name}{item.team_name ? " · " + item.team_name : ""} · Position #{item.position}</span></div>
+                <div className="certificateScore"><strong>{item.points ?? 0}</strong><span>points</span></div>
+                <button className="certificateAction" type="button" onClick={() => window.alert("Certificate generation is the next document step. This result is ready.")}>Prepare</button>
               </div>)}
             </div>}
           </div>}
