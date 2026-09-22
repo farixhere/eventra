@@ -9,7 +9,8 @@ const emptyTeam = { name: "", code: "" };
 const emptyParticipant = { name: "", email: "", phone: "", participantCode: "", teamId: "" };
 const emptyProgramme = { name: "", category: "", type: "individual", maxParticipants: "" };
 const emptyRegistration = { programmeId: "", participantId: "", teamId: "" };
-const emptySchedule = { programmeId: "", venueId: "", startsAt: "", endsAt: "" };\nconst emptyResult = { programmeId: "", participantId: "", teamId: "", position: "", totalScore: "", points: "", published: false };
+const emptySchedule = { programmeId: "", venueId: "", startsAt: "", endsAt: "" };
+const emptyResult = { programmeId: "", participantId: "", teamId: "", position: "", totalScore: "", points: "", published: false };
 
 function formatDate(value) {
   if (!value) return "Date not set";
@@ -25,8 +26,10 @@ export default function Dashboard() {
   const [participants, setParticipants] = useState([]);
   const [programmes, setProgrammes] = useState([]);
   const [registrations, setRegistrations] = useState([]);
-  const [schedules, setSchedules] = useState([]);\n  const [results, setResults] = useState([]);
-  const [scheduleForm, setScheduleForm] = useState(emptySchedule);\n  const [resultForm, setResultForm] = useState(emptyResult);
+  const [schedules, setSchedules] = useState([]);
+  const [results, setResults] = useState([]);
+  const [scheduleForm, setScheduleForm] = useState(emptySchedule);
+  const [resultForm, setResultForm] = useState(emptyResult);
   const [eventForm, setEventForm] = useState(emptyEvent);
   const [venueForm, setVenueForm] = useState(emptyVenue);
   const [teamForm, setTeamForm] = useState(emptyTeam);
@@ -77,7 +80,20 @@ export default function Dashboard() {
       if (section === "participants") setParticipants(data.participants || []);
       if (section === "programmes") setProgrammes(data.programmes || []);
       if (section === "registrations") setRegistrations(data.registrations || []);
-      if (section === "results") {\n        setResults(data.results || []);\n        const [programmesResponse, participantsResponse, teamsResponse] = await Promise.all([\n          fetch("/api/programmes?eventId=" + eventId, { cache: "no-store" }),\n          fetch("/api/participants?eventId=" + eventId, { cache: "no-store" }),\n          fetch("/api/teams?eventId=" + eventId, { cache: "no-store" })\n        ]);\n        const [programmesData, participantsData, teamsData] = await Promise.all([programmesResponse.json(), participantsResponse.json(), teamsResponse.json()]);\n        if (!programmesResponse.ok || !participantsResponse.ok || !teamsResponse.ok) throw new Error("Unable to load result options");\n        setProgrammes(programmesData.programmes || []);\n        setParticipants(participantsData.participants || []);\n        setTeams(teamsData.teams || []);\n      }\n      if (section === "schedules") {
+      if (section === "results") {
+        setResults(data.results || []);
+        const [programmesResponse, participantsResponse, teamsResponse] = await Promise.all([
+          fetch("/api/programmes?eventId=" + eventId, { cache: "no-store" }),
+          fetch("/api/participants?eventId=" + eventId, { cache: "no-store" }),
+          fetch("/api/teams?eventId=" + eventId, { cache: "no-store" })
+        ]);
+        const [programmesData, participantsData, teamsData] = await Promise.all([programmesResponse.json(), participantsResponse.json(), teamsResponse.json()]);
+        if (!programmesResponse.ok || !participantsResponse.ok || !teamsResponse.ok) throw new Error("Unable to load result options");
+        setProgrammes(programmesData.programmes || []);
+        setParticipants(participantsData.participants || []);
+        setTeams(teamsData.teams || []);
+      }
+      if (section === "schedules") {
         setSchedules(data.schedules || []);
         const [programmesResponse, venuesResponse] = await Promise.all([
           fetch("/api/programmes?eventId=" + eventId, { cache: "no-store" }),
