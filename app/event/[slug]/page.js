@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export default async function EventPage({ params }) {
   const { slug } = await params;
   const sql = getDb();
-  const events = await sql`SELECT id, name, slug, description, starts_on, ends_on, location, status FROM events WHERE slug = ${slug} LIMIT 1`;
+  const events = await sql`SELECT id, name, slug, description, start_date, end_date, location, status FROM events WHERE slug = ${slug} LIMIT 1`;
   if (!events.length) notFound();
   const event = events[0];
 
@@ -23,7 +23,7 @@ export default async function EventPage({ params }) {
       <span className="publicKicker">{event.status?.toUpperCase() || "EVENT"} · EVENTRA</span>
       <h1>{event.name}</h1>
       <p>{event.description || "A festival experience powered by Eventra."}</p>
-      <div className="publicMeta"><span>📍 {event.location || "Venue to be announced"}</span><span>◷ {event.starts_on ? new Date(event.starts_on).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}) : "Date to be announced"}{event.ends_on ? " — " + new Date(event.ends_on).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}) : ""}</span></div>
+      <div className="publicMeta"><span>📍 {event.location || "Venue to be announced"}</span><span>◷ {event.start_date ? new Date(event.starts_on).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}) : "Date to be announced"}{event.end_date ? " — " + new Date(event.ends_on).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}) : ""}</span></div>
     </section>
     {announcements.length > 0 && <section className="publicSection"><div className="publicSectionTitle"><small>UPDATES</small><h2>Latest announcements</h2></div><div className="announcementGrid">{announcements.map(a=><article className="announcementCard" key={a.id}><small>ANNOUNCEMENT</small><h3>{a.title}</h3><p>{a.body}</p></article>)}</div></section>}
     <section id="programmes" className="publicSection"><div className="publicSectionTitle"><small>THE LINEUP</small><h2>Programmes</h2></div><div className="programmeGrid">{programmes.map(p=><article className="publicProgramme" key={p.id}><span>{p.category || "GENERAL"}</span><h3>{p.name}</h3><p>{p.type === "team" ? "Team event" : "Individual event"}</p></article>)}{!programmes.length && <p className="publicEmpty">Programmes will appear here once published.</p>}</div></section>
