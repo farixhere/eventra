@@ -19,3 +19,57 @@
 
 .eventPublicLink{font-size:10px;font-weight:700;letter-spacing:.5px;color:#171714;background:#eeeae1;border:1px solid #d9d5cc;padding:8px 10px;cursor:pointer;white-space:nowrap}.eventPublicLink:hover{background:#e4dfd5}.eventRowButton{gap:12px}.eventRowButton>div:first-child{min-width:0;flex:1}.eventDelete{white-space:nowrap}
 @media(max-width:760px){.eventPublicLink{padding:7px 8px;font-size:9px}.eventDelete{font-size:9px}}
+
+/* Eventra control center refresh */
+.sideNav{padding:22px 14px;gap:4px}
+.sideBrand{display:flex;align-items:center;gap:10px;padding:4px 9px 25px;color:#fff}
+.sideBrandMark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--ink);font-weight:900;font-size:18px}
+.sideBrand strong{display:block;font-size:14px;letter-spacing:-.3px}
+.sideBrand div small{display:block;margin:2px 0 0;color:#77746d;font:8px 'DM Mono'}
+.sideNav button{display:flex;align-items:center;justify-content:space-between;width:100%;gap:10px}
+.sideNav button b{font:11px 'DM Mono';color:#66645d}
+.sideNav button.selected b{color:var(--accent)}
+.sideBottom{margin-top:auto;padding-top:16px;border-top:1px solid #3a3a34;display:flex;flex-direction:column;gap:3px}
+.sideBottom button,.sideBottom a{display:flex;gap:10px;align-items:center;color:#8e8b83}
+.sideBottom button:first-letter,.sideBottom a:first-letter{color:#a4c52b}
+.workspaceTop{align-items:center}
+.workspaceEyebrow{font:500 10px 'DM Mono';letter-spacing:1.5px;color:#77746d;display:flex;align-items:center;gap:7px}
+.livePulse{width:7px;height:7px;border-radius:50%;background:#a4c52b;box-shadow:0 0 0 4px #a4c52b22}
+.workspaceTitle h1{margin-top:12px}
+.workspaceActions{display:flex;align-items:center;gap:9px}
+.workspaceActions a{border:1px solid #c9c4ba;border-radius:100px;padding:11px 15px;font-size:11px;font-weight:700;background:#fffdf8}
+.workspaceActions button{background:var(--ink);color:#fff;border:0;border-radius:100px;padding:12px 17px;font-weight:700}
+.statGrid{margin:38px 0 16px}
+.stat{min-height:125px}
+.statAccent{background:var(--ink);color:#fff;border-color:var(--ink)}
+.statAccent small,.statAccent span{color:#aaa79e}
+.statAccent strong{color:var(--accent)}
+.commandStrip{display:flex;justify-content:space-between;align-items:center;background:#20201c;color:#fff;border-radius:12px;padding:15px 18px;margin:0 0 18px}
+.commandStrip>div:first-child{display:flex;align-items:center;gap:12px}
+.commandIcon{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:#33332e;color:var(--accent)}
+.commandStrip strong,.commandStrip span{display:block}
+.commandStrip strong{font-size:12px}
+.commandStrip>div:first-child span:last-child{font-size:10px;color:#99968e;margin-top:2px}
+.commandActions{display:flex;gap:6px}
+.commandActions button{border:1px solid #57574f;background:transparent;color:#fff;border-radius:6px;padding:8px 10px;font:600 10px Manrope;cursor:pointer}
+.commandActions button:last-child{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.panelTop{align-items:center}
+.panelTop small{font:500 9px 'DM Mono';letter-spacing:1.3px;color:#99958c}
+.panelTop h2{margin-top:4px}
+.eventRowButton{display:grid;grid-template-columns:1fr 100px 100px 70px 20px;cursor:pointer}
+.eventRowButton:hover{background:#faf8f1}
+.eventPublicLink{font-size:10px;font-weight:700;letter-spacing:.2px;color:var(--ink);background:#eeeae1;border:1px solid #d9d5cc;padding:8px 10px;cursor:pointer;white-space:nowrap;text-align:center}
+.eventPublicLink:hover{background:#e4dfd5}
+.eventDelete{margin-left:0}
+@media(max-width:760px){
+  .workspaceTop{display:block}
+  .workspaceActions{margin-top:18px;flex-wrap:wrap}
+  .workspaceActions a,.workspaceActions button{font-size:11px}
+  .commandStrip{display:block}
+  .commandActions{margin-top:12px;display:grid;grid-template-columns:1fr}
+  .eventRowButton{grid-template-columns:1fr auto;gap:9px}
+  .eventPublicLink,.eventDelete{grid-column:auto}
+  .eventRowButton .pill{justify-self:end}
+  .rowArrow{display:none}
+  .sideNav{display:none}
+}
