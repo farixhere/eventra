@@ -135,32 +135,6 @@
 .modalBackdrop{backdrop-filter:blur(5px)}.eventModal{box-shadow:0 30px 90px #17171445}.eventModal input:focus,.eventModal textarea:focus{border-color:#958cff;box-shadow:0 0 0 3px #7567f814}
 @media(max-width:760px){.workspace:before{width:80%;height:180px}.stat{box-shadow:0 4px 15px #17171408}.commandStrip{box-shadow:none}.eventRowActive{box-shadow:inset 3px 0 0 var(--accent)}}
 
-.resultHeaderTools{display:flex;align-items:center;gap:14px}.resultAutoButton{border:1px solid #cfc9ff!important;background:#f3f0ff!important;color:#5d51c7!important;padding:10px 13px!important;border-radius:9px!important;font-size:11px!important;font-weight:800!important;cursor:pointer;transition:.18s;box-shadow:0 4px 12px #7567f812}.resultAutoButton:hover{transform:translateY(-2px);background:#e9e5ff!important;box-shadow:0 8px 18px #7567f820}.resultAutoButton:disabled{opacity:.55;cursor:not-allowed;transform:none}.resultHeaderMeta{min-width:74px}@media(max-width:760px){.resultHeaderTools{width:100%;justify-content:space-between;margin-top:14px}.resultAutoButton{flex:1}}
-
-/* Configurable scoring rules */
-.scoringRulesGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 20px;background:#f7f5ef}
-.scoringRulesCard{border:1px solid #dedbd2;border-radius:10px;background:#fff;overflow:hidden}
-.scoringRulesCardHead{display:flex;justify-content:space-between;gap:16px;padding:16px 18px;border-bottom:1px solid #ebe8df}
-.scoringRulesCardHead small{display:block;font:600 9px 'DM Mono';letter-spacing:1.4px;color:#817d74;margin-bottom:5px}
-.scoringRulesCardHead strong{display:block;font-size:15px;letter-spacing:-.3px}
-.scoringRulesCardHead span:not(.rulesTotal){display:block;font-size:10px;color:#8a867e;margin-top:4px;line-height:1.45}
-.rulesTotal{font:700 11px 'DM Mono';color:#6558c8;white-space:nowrap}
-.ruleForm{display:grid;grid-template-columns:1.1fr 1.4fr .8fr auto;gap:7px;padding:12px;border-bottom:1px solid #ebe8df;background:#fbfaf6}
-.ruleForm select,.ruleForm input{min-height:35px;border:1px solid #d9d5cb;border-radius:7px;padding:8px 9px;background:#fff;font:500 10px Manrope;min-width:0}
-.ruleForm button{min-height:35px;border:0;border-radius:7px;padding:0 11px;background:#20201c;color:#fff;font:700 10px Manrope;cursor:pointer}
-.rulesList{max-height:190px;overflow:auto}
-.ruleRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid #efede7}
-.ruleRow:last-child{border-bottom:0}
-.ruleRow strong{display:block;font-size:11px}.ruleRow span{display:block;font-size:9px;color:#8a867e;margin-top:3px}
-.ruleRow button{border:1px solid #ddd9d0;background:#fff;border-radius:100px;padding:5px 8px;font-size:9px;cursor:pointer}
-.rulesEmpty{padding:16px 12px;color:#969188;font-size:10px}
-.scoreForm{grid-template-columns:1fr 1fr 1.1fr .9fr .9fr 1.4fr auto}
-.scoreField select:disabled{background:#f1efe9;color:#969188}
-.leaderboardMarks strong{color:#158f87}
-.leaderboardMarks span,.leaderboardPoints span{display:block;font-size:9px;color:#8a867e}
-@media(max-width:900px){.scoringRulesGrid{grid-template-columns:1fr}.scoreForm{grid-template-columns:1fr 1fr}}
-@media(max-width:760px){.scoringRulesGrid{padding:12px 16px}.ruleForm{grid-template-columns:1fr 1fr}.ruleForm select:first-child{grid-column:1/-1}.ruleForm button{width:100%}.scoreForm{grid-template-columns:1fr}.scoringRulesCardHead{padding:14px}.leaderboardMarks{display:none}}
-
 
 .resultManualButton,.resultPublishButton{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.resultManualButton{background:#111;color:#fff}.resultPublishButton{background:#dff6e9;color:#137a4b}.resultPublishedLabel{font-size:10px;font-weight:700;color:#137a4b;white-space:nowrap}
 @media(max-width:760px){.resultHeaderTools{flex-wrap:wrap}.resultManualButton{width:100%}.resultRow{grid-template-columns:1fr auto}.resultPublishButton,.resultPublishedLabel,.resultDelete{grid-column:auto}}
