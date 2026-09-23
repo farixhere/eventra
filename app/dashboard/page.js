@@ -37,7 +37,8 @@ export default function Dashboard() {
   const [participantForm, setParticipantForm] = useState(emptyParticipant);
   const [programmeForm, setProgrammeForm] = useState(emptyProgramme);
   const [registrationForm, setRegistrationForm] = useState(emptyRegistration);
-  const [open, setOpen] = useState(false);
+  const [eventModalOpen, setEventModalOpen] = useState(false);
+  const [resultFormOpen, setResultFormOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingSection, setLoadingSection] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -119,7 +120,7 @@ export default function Dashboard() {
       const response = await fetch("/api/events", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(eventForm) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to create event");
-      setEvents((current) => [data.event, ...current]); setSelectedId(data.event.id); setEventForm(emptyEvent); setOpen(false); setSection("events");
+      setEvents((current) => [data.event, ...current]); setSelectedId(data.event.id); setEventForm(emptyEvent); setEventModalOpen(false); setSection("events");
     } catch (err) { setError(err.message); } finally { setSaving(false); }
   }
 
@@ -191,7 +192,7 @@ export default function Dashboard() {
   </div>
   <div className="workspaceActions">
     {selectedEvent(events, selectedId) && <a href={"/event/" + selectedEvent(events, selectedId).slug} target="_blank" rel="noreferrer">View public site ↗</a>}
-    <button onClick={() => { setError(""); setOpen(true); }}>+ New event</button>
+    <button onClick={() => { setError(""); setEventModalOpen(true); }}>+ New event</button>
   </div>
 </div>
           {error && <div className="formError">{error}</div>}
@@ -276,8 +277,8 @@ export default function Dashboard() {
           </div>}
 
           {section === "results" && selectedEvent(events, selectedId) && <div className="resultPanel">
-            <div className="resultHeader"><div><small>MANUAL RESULTS</small><h2>Results</h2><p>Enter the final result yourself. Nothing is calculated automatically.</p></div><div className="resultHeaderTools"><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div><button type="button" className="resultManualButton" onClick={() => setOpen((value) => !value)}>+ Manual result</button></div></div>
-            {open && <form className="resultForm" onSubmit={async (e) => { e.preventDefault(); setSaving(true); setError(""); try { const response = await fetch("/api/results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...resultForm, eventId: selectedId, published: false }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to create result"); setResultForm(emptyResult); setOpen(false); await loadSectionData(); } catch (err) { setError(err.message); } finally { setSaving(false); } }}>
+            <div className="resultHeader"><div><small>MANUAL RESULTS</small><h2>Results</h2><p>Enter the final result yourself. Nothing is calculated automatically.</p></div><div className="resultHeaderTools"><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div><button type="button" className="resultManualButton" onClick={() => setResultFormOpen((value) => !value)}>+ Manual result</button></div></div>
+            {resultFormOpen && <form className="resultForm" onSubmit={async (e) => { e.preventDefault(); setSaving(true); setError(""); try { const response = await fetch("/api/results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...resultForm, eventId: selectedId, published: false }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to create result"); setResultForm(emptyResult); setResultFormOpen(false); await loadSectionData(); } catch (err) { setError(err.message); } finally { setSaving(false); } }}>
               <div className="resultField"><label>Programme</label><select value={resultForm.programmeId} onChange={(e) => { const programmeId=e.target.value; setResultForm({...resultForm,programmeId,participantId:"",teamId:""}); }} required><option value="">Choose programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name} · {p.type}</option>)}</select></div>
               <div className="resultField"><label>Entry</label>{programmes.find((p)=>p.id===resultForm.programmeId)?.type === "team" ? <select value={resultForm.teamId} onChange={(e)=>setResultForm({...resultForm,teamId:e.target.value})} required><option value="">Choose team</option>{teams.map((t)=><option key={t.id} value={t.id}>{t.name}</option>)}</select> : <select value={resultForm.participantId} onChange={(e)=>setResultForm({...resultForm,participantId:e.target.value})} required><option value="">Choose participant</option>{participants.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select>}</div>
               <div className="resultField"><label>Position</label><input type="number" min="1" value={resultForm.position} onChange={(e)=>setResultForm({...resultForm,position:e.target.value})} placeholder="1" required /></div>
@@ -301,7 +302,7 @@ export default function Dashboard() {
         </section>
       </div>
 
-      {open && <div className="modalBackdrop" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}><div className="eventModal"><div className="modalHeader"><div><small>NEW EVENT</small><h2>Create an event</h2></div><button className="modalClose" onClick={() => setOpen(false)} aria-label="Close">×</button></div><form onSubmit={createEvent}><label>Event name<input name="name" value={eventForm.name} onChange={(e) => setEventForm({...eventForm,name:e.target.value})} placeholder="e.g. Verve '27" required /></label><label>Description<textarea name="description" value={eventForm.description} onChange={(e) => setEventForm({...eventForm,description:e.target.value})} placeholder="What is this event about?" rows="3" /></label><div className="formGrid"><label>Start date<input type="date" name="startDate" value={eventForm.startDate} onChange={(e) => setEventForm({...eventForm,startDate:e.target.value})} /></label><label>End date<input type="date" name="endDate" value={eventForm.endDate} onChange={(e) => setEventForm({...eventForm,endDate:e.target.value})} /></label></div><label>Location<input name="location" value={eventForm.location} onChange={(e) => setEventForm({...eventForm,location:e.target.value})} placeholder="Campus / venue / city" /></label><div className="modalActions"><button type="button" onClick={() => setOpen(false)}>Cancel</button><button type="submit" disabled={saving}>{saving ? "Creating…" : "Create event →"}</button></div></form></div></div>}
+      {eventModalOpen && <div className="modalBackdrop" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}><div className="eventModal"><div className="modalHeader"><div><small>NEW EVENT</small><h2>Create an event</h2></div><button className="modalClose" onClick={() => setOpen(false)} aria-label="Close">×</button></div><form onSubmit={createEvent}><label>Event name<input name="name" value={eventForm.name} onChange={(e) => setEventForm({...eventForm,name:e.target.value})} placeholder="e.g. Verve '27" required /></label><label>Description<textarea name="description" value={eventForm.description} onChange={(e) => setEventForm({...eventForm,description:e.target.value})} placeholder="What is this event about?" rows="3" /></label><div className="formGrid"><label>Start date<input type="date" name="startDate" value={eventForm.startDate} onChange={(e) => setEventForm({...eventForm,startDate:e.target.value})} /></label><label>End date<input type="date" name="endDate" value={eventForm.endDate} onChange={(e) => setEventForm({...eventForm,endDate:e.target.value})} /></label></div><label>Location<input name="location" value={eventForm.location} onChange={(e) => setEventForm({...eventForm,location:e.target.value})} placeholder="Campus / venue / city" /></label><div className="modalActions"><button type="button" onClick={() => setOpen(false)}>Cancel</button><button type="submit" disabled={saving}>{saving ? "Creating…" : "Create event →"}</button></div></form></div></div>}
     </main>
   );
 }
