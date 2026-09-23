@@ -1,4 +1,88 @@
 "use client";
-import {useState} from "react";
-import {useRouter} from "next/navigation";
-export default function AdminLoginPage(){const router=useRouter();const[password,setPassword]=useState("");const[error,setError]=useState("");const[saving,setSaving]=useState(false);async function submit(event){event.preventDefault();setSaving(true);setError("");try{const response=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});const data=await response.json();if(!response.ok)throw new Error(data.error||"Unable to sign in");router.replace("/dashboard");router.refresh();}catch(err){setError(err.message);}finally{setSaving(false);}}return <main className="dashboardPage"><div className="dashShell" style={{minHeight:"100vh",display:"grid",placeItems:"center"}}><section className="workspace" style={{maxWidth:520,width:"100%",margin:"auto"}}><div className="workspaceTop"><div className="workspaceTitle"><div className="workspaceEyebrow"><span className="livePulse"></span> EVENTRA ADMIN</div><h1>Sign in</h1><p>Enter the organiser password to access Eventra Control Center.</p></div></div>{error&&<div className="formError">{error}</div>}<form onSubmit={submit} className="eventPanel" style={{display:"grid",gap:16}}><label><span style={{display:"block",marginBottom:8}}>Admin password</span><input type="password" value={password} onChange={event=>setPassword(event.target.value)} autoComplete="current-password" required autoFocus style={{width:"100%"}}/></label><button type="submit" disabled={saving}>{saving?"Signing in…":"Sign in →"}</button></form></section></div></main>}
+
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+export default function AdminLoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submit(event) {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to sign in");
+
+      const next = searchParams.get("next");
+      router.replace(next && next.startsWith("/dashboard") ? next : "/dashboard");
+      router.refresh();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <main className="adminLoginPage">
+      <div className="adminLoginGlow adminLoginGlowOne" />
+      <div className="adminLoginGlow adminLoginGlowTwo" />
+
+      <section className="adminLoginShell">
+        <div className="adminLoginBrand">
+          <a href="/" className="adminLoginLogo">eventra<span>.</span></a>
+          <span className="adminLoginBadge">CONTROL CENTER</span>
+        </div>
+
+        <div className="adminLoginCard">
+          <div className="adminLoginIcon">e</div>
+          <div className="adminLoginEyebrow">ORGANISER ACCESS</div>
+          <h1>Welcome back.</h1>
+          <p className="adminLoginIntro">
+            Sign in to manage events, programmes, participants and published results.
+          </p>
+
+          {error && <div className="adminLoginError">{error}</div>}
+
+          <form onSubmit={submit}>
+            <label className="adminLoginField">
+              <span>Admin password</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                required
+                autoFocus
+              />
+            </label>
+
+            <button className="adminLoginButton" type="submit" disabled={saving}>
+              {saving ? "Checking access…" : "Enter Control Center"}
+              {!saving && <span>↗</span>}
+            </button>
+          </form>
+
+          <div className="adminLoginFoot">
+            <span><i /> Private organiser area</span>
+            <a href="/">Back to website</a>
+          </div>
+        </div>
+
+        <p className="adminLoginCopyright">EVENTRA · EVENT MANAGEMENT</p>
+      </section>
+    </main>
+  );
+}
