@@ -8,9 +8,10 @@ export default async function SchedulesPage({ params, searchParams }) {
   const query = await searchParams;
   const filter = String(query?.day || "all");
   const sql = getDb();
-  const events = await sql`SELECT id,name,slug FROM events WHERE slug=${slug} LIMIT 1`;
+  const events = await sql`SELECT id,name,slug,is_public FROM events WHERE slug=${slug} LIMIT 1`;
   if (!events.length) notFound();
   const event = events[0];
+  if (!event.is_public) notFound();
 
   const schedules = await sql`
     SELECT s.id,s.starts_at,s.ends_at,s.status,p.name AS programme_name,p.category,v.name AS venue_name,v.location AS venue_location
