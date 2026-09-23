@@ -164,6 +164,16 @@ export default function Dashboard() {
   }
 
 
+  async function togglePublished(kind, id, published) {
+    setError("");
+    try {
+      const response = await fetch("/api/" + kind, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, published: !published }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to update publication");
+      await loadSectionData();
+    } catch (err) { setError(err.message); }
+  }
+
   async function removeResource(kind, id) {
     if (!window.confirm("Delete this " + kind.slice(0, -1) + "?")) return;
     setError("");
@@ -357,4 +367,7 @@ export default function Dashboard() {
 
 function selectedEvent(events, id) { return events.find((event) => event.id === id) || null; }
 function ResourcePanel({ title, count, hint, loading, children }) { return <div className="resourcePanel"><div className="resourceHeader"><div><small>EVENT MANAGEMENT</small><h2>{title}</h2><p>{hint}</p></div><span className="resourceCount">{count}</span></div>{children}{loading && <div className="eventEmpty">Loading…</div>}</div>; }
-function ResourceList({ items, kind, empty, onDelete, render }) { if (!items.length) return <div className="eventEmpty">{empty}</div>; return <div className="resourceList">{items.map((item) => <div className="resourceRow" key={item.id}><div>{render(item)}</div><button onClick={() => onDelete(kind, item.id)}>Delete</button></div>)}</div>; }
+function ResourceList({ items, kind, empty, onDelete, render }) {
+  if (!items.length) return <div className="eventEmpty">{empty}</div>;
+  return <div className="resourceList">{items.map((item) => <div className="resourceRow" key={item.id}><div>{render(item)}</div><div className="resourceActions">{typeof item.published === "boolean" && <button onClick={() => togglePublished(kind, item.id, item.published)}>{item.published ? "Unpublish" : "Publish"}</button>}<button onClick={() => onDelete(kind, item.id)}>Delete</button></div></div>)}</div>;
+}
