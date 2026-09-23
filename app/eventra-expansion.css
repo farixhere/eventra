@@ -17,3 +17,40 @@
 .contactForm button:hover{background:var(--event-secondary)}
 @media(max-width:900px){.publicGalleryGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.publicGalleryGrid{grid-template-columns:1fr}.publicCallout{align-items:flex-start;flex-direction:column}.eventHeroRich{min-height:460px}}
+
+.studioPage{min-height:100vh;background:#f3f4ef;color:#111;padding:28px}
+.studioHeader{max-width:1400px;margin:0 auto 24px;display:flex;justify-content:space-between;gap:24px;align-items:flex-end}
+.studioHeader small{font-weight:800;letter-spacing:.14em;color:#70746d}
+.studioHeader h1{font-size:42px;margin:6px 0}
+.studioHeader p{margin:0;color:#6a6e67}
+.studioHeaderActions{display:flex;gap:10px;align-items:center}
+.studioHeaderActions select,.studioHeaderActions a{padding:12px 14px;border-radius:12px;border:1px solid #d8dbd3;background:#fff;color:#111;text-decoration:none}
+.studioShell{max-width:1400px;margin:auto;display:grid;grid-template-columns:230px 1fr;gap:22px}
+.studioNav{background:#111;border-radius:20px;padding:12px;height:max-content;position:sticky;top:20px}
+.studioNav button{width:100%;text-align:left;border:0;background:transparent;color:#aaa;padding:12px 13px;border-radius:12px;cursor:pointer}
+.studioNav button.active,.studioNav button:hover{background:#252525;color:#fff}
+.studioContent{min-width:0}
+.studioStats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.studioStats>div,.studioGrid article,.studioForm,.studioList{background:#fff;border:1px solid #e1e3dc;border-radius:18px;padding:20px}
+.studioStats small,.studioGrid small{display:block;color:#777;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.studioStats strong{display:block;font-size:34px;margin-top:7px}
+.studioGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.studioGrid h2{margin:8px 0 4px;font-size:22px}
+.studioGrid p{color:#70746d;margin:0}
+.studioForm{display:grid;gap:12px;margin-bottom:16px}
+.studioForm h2{margin:0 0 2px}
+.studioForm p{margin:0 0 8px;color:#70746d}
+.studioForm label{display:grid;gap:6px;font-weight:700}
+.studioForm input,.studioForm textarea,.studioForm select{width:100%;padding:12px 13px;border:1px solid #d7d9d3;border-radius:12px;background:#fff;font:inherit}
+.studioForm input[type=color]{height:44px;padding:4px}
+.studioForm input[type=checkbox]{width:20px;height:20px}
+.studioForm button,.studioRow button{justify-self:start;border:0;border-radius:999px;padding:11px 16px;background:#111;color:#fff;font-weight:800;cursor:pointer}
+.studioTwo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.studioList{padding:8px}
+.studioRow{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:14px 12px;border-bottom:1px solid #eceee8}
+.studioRow:last-child{border-bottom:0}
+.studioRow strong{display:block}
+.studioRow span,.studioRow p{display:block;color:#777;margin:4px 0 0;font-size:13px}
+.studioEmpty{padding:28px;text-align:center;color:#777}
+@media(max-width:900px){.studioShell{grid-template-columns:1fr}.studioNav{position:static;display:flex;overflow:auto}.studioNav button{white-space:nowrap}.studioStats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.studioPage{padding:14px}.studioHeader{align-items:flex-start;flex-direction:column}.studioHeader h1{font-size:32px}.studioHeaderActions{width:100%;flex-wrap:wrap}.studioHeaderActions select{flex:1}.studioGrid{grid-template-columns:1fr}.studioTwo{grid-template-columns:1fr}}
