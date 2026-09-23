@@ -32,7 +32,7 @@ export default async function ResultsPage({ params }) {
     </div></nav>
     <section className="publicHero compactHero">
       <span className="publicKicker">RESULTS · {event.name.toUpperCase()}</span>
-      <h1>Leaderboard</h1>
+      <h1>Published Results</h1>
       <p>Published results only. Unpublished entries stay inside the organiser dashboard until they are released.</p>
     </section>
     <section className="publicSection">
