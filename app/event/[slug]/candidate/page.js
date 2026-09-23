@@ -8,9 +8,10 @@ export default async function CandidatePage({ params, searchParams }) {
   const query = await searchParams;
   const chest = String(query?.chest || "").trim();
   const sql = getDb();
-  const events = await sql`SELECT id,name,slug FROM events WHERE slug=${slug} LIMIT 1`;
+  const events = await sql`SELECT id,name,slug,is_public FROM events WHERE slug=${slug} LIMIT 1`;
   if (!events.length) notFound();
   const event = events[0];
+  if (!event.is_public) notFound();
 
   let participant = null;
   let results = [];
