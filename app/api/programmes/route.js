@@ -43,3 +43,26 @@ export async function DELETE(request) {
     return Response.json({ error: "Unable to delete programme" }, { status: 500 });
   }
 }
+
+
+export async function PATCH(request) {
+  try {
+    const body = await request.json();
+    if (!body.id) return Response.json({ error: "id is required" }, { status: 400 });
+    const sql = getDb();
+    const rows = await sql`
+      UPDATE programmes
+      SET name=COALESCE(NULLIF(TRIM(${body.name || ""}),''),name),
+          category=COALESCE(${body.category === undefined ? null : (body.category?.trim() || null)},category),
+          type=COALESCE(${body.type || null},type),
+          max_participants=CASE WHEN ${body.maxParticipants === undefined} THEN max_participants ELSE NULLIF(${body.maxParticipants || ""},'')::integer END
+      WHERE id=${body.id}
+      RETURNING id,name,category,type,max_participants,created_at
+    `;
+    if (!rows[0]) return Response.json({ error: "Programme not found" }, { status: 404 });
+    return Response.json({ programme: rows[0] });
+  } catch (error) {
+    console.error("PATCH /api/programmes failed", error);
+    return Response.json({ error: "Unable to update programme" }, { status: 500 });
+  }
+}
