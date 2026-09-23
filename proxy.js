@@ -7,7 +7,7 @@ const PUBLIC_API = new Set([
   "/api/public-registration",
 ]);
 
-export async function proxy(request) {
+async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/dashboard/login") return NextResponse.next();
@@ -30,6 +30,8 @@ export async function proxy(request) {
   loginUrl.searchParams.set("next", pathname);
   return NextResponse.redirect(loginUrl);
 }
+
+export default proxy;
 
 export const config = {
   matcher: ["/dashboard/:path*", "/api/:path*"],
