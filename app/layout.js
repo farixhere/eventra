@@ -3,7 +3,7 @@ import "./eventra-expansion.css";
 
 export const metadata = {
   title: "Eventra — Festival Management",
-  description: "Run festivals, competitions and campus events from one place."
+  description: "Run festivals, campus events and programmes from one place."
 };
 
 export default function RootLayout({ children }) {
