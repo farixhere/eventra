@@ -50,3 +50,32 @@ export async function DELETE(request) {
     return Response.json({ error: "Unable to delete participant" }, { status: 500 });
   }
 }
+
+
+export async function PATCH(request) {
+  try {
+    const body = await request.json();
+    if (!body.id) return Response.json({ error: "id is required" }, { status: 400 });
+    const sql = getDb();
+    const rows = await sql`
+      UPDATE participants
+      SET name=COALESCE(NULLIF(TRIM(${body.name || ""}),''),name),
+          email=CASE WHEN ${body.email === undefined} THEN email ELSE NULLIF(TRIM(${body.email || ""}),'') END,
+          phone=CASE WHEN ${body.phone === undefined} THEN phone ELSE NULLIF(TRIM(${body.phone || ""}),'') END,
+          team_id=CASE WHEN ${body.teamId === undefined} THEN team_id ELSE ${body.teamId || null} END,
+          school_college=CASE WHEN ${body.schoolCollege === undefined} THEN school_college ELSE NULLIF(TRIM(${body.schoolCollege || ""}),'') END,
+          class_year=CASE WHEN ${body.classYear === undefined} THEN class_year ELSE NULLIF(TRIM(${body.classYear || ""}),'') END,
+          profile_picture_url=CASE WHEN ${body.profilePictureUrl === undefined} THEN profile_picture_url ELSE NULLIF(TRIM(${body.profilePictureUrl || ""}),'') END,
+          status=COALESCE(${body.status || null},status),
+          address=CASE WHEN ${body.address === undefined} THEN address ELSE NULLIF(TRIM(${body.address || ""}),'') END,
+          custom_fields=COALESCE(${body.customFields === undefined ? null : JSON.stringify(body.customFields)},custom_fields)
+      WHERE id=${body.id}
+      RETURNING id,name,email,phone,participant_code,team_id,school_college,class_year,profile_picture_url,status,address,custom_fields,created_at
+    `;
+    if (!rows[0]) return Response.json({ error: "Participant not found" }, { status: 404 });
+    return Response.json({ participant: rows[0] });
+  } catch (error) {
+    console.error("PATCH /api/participants failed", error);
+    return Response.json({ error: "Unable to update participant" }, { status: 500 });
+  }
+}
