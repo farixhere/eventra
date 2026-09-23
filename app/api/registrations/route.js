@@ -35,6 +35,14 @@ export async function POST(request) {
     if (!programme[0]) return Response.json({ error: "Programme not found" }, { status: 404 });
     if (programme[0].type === "individual" && !body.participantId) return Response.json({ error: "Individual programmes require a participant" }, { status: 400 });
     if (programme[0].type === "team" && !body.teamId) return Response.json({ error: "Team programmes require a team" }, { status: 400 });
+    if (body.participantId) {
+      const participant = await sql`SELECT id FROM participants WHERE id = ${body.participantId} AND event_id = ${programme[0].event_id}`;
+      if (!participant[0]) return Response.json({ error: "Selected participant does not belong to this event" }, { status: 400 });
+    }
+    if (body.teamId) {
+      const team = await sql`SELECT id FROM teams WHERE id = ${body.teamId} AND event_id = ${programme[0].event_id}`;
+      if (!team[0]) return Response.json({ error: "Selected team does not belong to this event" }, { status: 400 });
+    }
     if (programme[0].max_participants) {
       const count = await sql`SELECT COUNT(*)::int AS count FROM registrations WHERE programme_id = ${body.programmeId} AND status = 'registered'`;
       if (count[0].count >= programme[0].max_participants) return Response.json({ error: "This programme has reached its participant limit" }, { status: 409 });
