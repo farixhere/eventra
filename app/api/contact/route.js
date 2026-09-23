@@ -47,3 +47,16 @@ export async function PATCH(request) {
   if (!rows[0]) return Response.json({ error: "Message not found" }, { status: 404 });
   return Response.json({ message: rows[0] });
 }
+
+
+export async function DELETE(request) {
+  try {
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "id is required" }, { status: 400 });
+    const sql = getDb();
+    await sql`DELETE FROM contact_messages WHERE id=${id}`;
+    return Response.json({ ok: true });
+  } catch (error) {
+    return Response.json({ error: "Unable to delete contact message" }, { status: 500 });
+  }
+}
