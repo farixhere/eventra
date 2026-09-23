@@ -4,6 +4,8 @@ function makeSlug(value) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+const eventFields = "id,name,slug,description,start_date,end_date,location,status,tagline,logo_url,banner_url,website_theme,primary_color,secondary_color,is_public,registration_open,registration_deadline,created_at";
+
 
 export async function GET() {
   try {
@@ -38,7 +40,7 @@ export async function PATCH(request) {
     const body = await request.json();
     if (!body.id) return Response.json({ error: "id is required" }, { status: 400 });
     const sql = getDb();
-    const rows = await sql`UPDATE events SET name=COALESCE(${body.name?.trim() || null},name), description=COALESCE(${body.description?.trim() || null},description), start_date=COALESCE(${body.startDate || null},start_date), end_date=COALESCE(${body.endDate || null},end_date), location=COALESCE(${body.location?.trim() || null},location), tagline=COALESCE(${body.tagline?.trim() || null},tagline), logo_url=COALESCE(${body.logoUrl?.trim() || null},logo_url), banner_url=COALESCE(${body.bannerUrl?.trim() || null},banner_url), website_theme=COALESCE(${body.websiteTheme || null},website_theme), primary_color=COALESCE(${body.primaryColor || null},primary_color), secondary_color=COALESCE(${body.secondaryColor || null},secondary_color), is_public=COALESCE(${typeof body.isPublic === "boolean" ? body.isPublic : null},is_public), registration_open=COALESCE(${typeof body.registrationOpen === "boolean" ? body.registrationOpen : null},registration_open), registration_deadline=COALESCE(${body.registrationDeadline || null},registration_deadline), status=COALESCE(${body.status || null},status) WHERE id=${body.id} RETURNING ${sql.unsafe(eventFields)}`;
+    const rows = await sql`UPDATE events SET name=COALESCE(${body.name?.trim() || null},name), description=COALESCE(${body.description?.trim() || null},description), start_date=COALESCE(${body.startDate || null},start_date), end_date=COALESCE(${body.endDate || null},end_date), location=COALESCE(${body.location?.trim() || null},location), tagline=COALESCE(${body.tagline?.trim() || null},tagline), logo_url=COALESCE(${body.logoUrl?.trim() || null},logo_url), banner_url=COALESCE(${body.bannerUrl?.trim() || null},banner_url), website_theme=COALESCE(${body.websiteTheme || null},website_theme), primary_color=COALESCE(${body.primaryColor || null},primary_color), secondary_color=COALESCE(${body.secondaryColor || null},secondary_color), is_public=COALESCE(${typeof body.isPublic === "boolean" ? body.isPublic : null},is_public), registration_open=COALESCE(${typeof body.registrationOpen === "boolean" ? body.registrationOpen : null},registration_open), registration_deadline=COALESCE(${body.registrationDeadline || null},registration_deadline), status=COALESCE(${body.status || null},status) WHERE id=${body.id} RETURNING id,name,slug,description,start_date,end_date,location,status,tagline,logo_url,banner_url,website_theme,primary_color,secondary_color,is_public,registration_open,registration_deadline,created_at`;
     if (!rows[0]) return Response.json({ error: "Event not found" }, { status: 404 });
     return Response.json({ event: rows[0] });
   } catch (error) {
@@ -64,7 +66,6 @@ export async function DELETE(request) {
       sql`DELETE FROM contact_messages WHERE event_id = ${id}`,
       sql`DELETE FROM event_analytics WHERE event_id = ${id}`,
       sql`DELETE FROM live_updates WHERE event_id = ${id}`,
-      sql`DELETE FROM judges WHERE event_id = ${id}`,
       sql`DELETE FROM programmes WHERE event_id = ${id}`,
       sql`DELETE FROM participants WHERE event_id = ${id}`,
       sql`DELETE FROM teams WHERE event_id = ${id}`,
