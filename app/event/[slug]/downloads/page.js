@@ -6,9 +6,10 @@ export const dynamic = "force-dynamic";
 export default async function DownloadsPage({ params }) {
   const { slug } = await params;
   const sql = getDb();
-  const events = await sql`SELECT id,name,slug FROM events WHERE slug=${slug} LIMIT 1`;
+  const events = await sql`SELECT id,name,slug,is_public FROM events WHERE slug=${slug} LIMIT 1`;
   if (!events.length) notFound();
   const event = events[0];
+  if (!event.is_public) notFound();
 
   let files = [];
   try {
