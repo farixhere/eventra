@@ -38,7 +38,29 @@ export async function POST(request) {
     `;
     return Response.json({ certificate: rows[0] }, { status: 201 });
   } catch (error) {
+    console.error("POST /api/certificates failed", error);
     return Response.json({ error: "Unable to create certificate" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request) {
+  try {
+    const body = await request.json();
+    if (!body.id) return Response.json({ error: "id is required" }, { status: 400 });
+    const sql = getDb();
+    const rows = await sql`
+      UPDATE certificates
+      SET title=COALESCE(NULLIF(TRIM(${body.title || ""}),''),title),
+          certificate_type=COALESCE(${body.certificateType || null},certificate_type),
+          file_url=CASE WHEN ${body.fileUrl === undefined} THEN file_url ELSE NULLIF(TRIM(${body.fileUrl || ""}),'') END
+      WHERE id=${body.id}
+      RETURNING *
+    `;
+    if (!rows[0]) return Response.json({ error: "Certificate not found" }, { status: 404 });
+    return Response.json({ certificate: rows[0] });
+  } catch (error) {
+    console.error("PATCH /api/certificates failed", error);
+    return Response.json({ error: "Unable to update certificate" }, { status: 500 });
   }
 }
 
