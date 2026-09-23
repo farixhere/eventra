@@ -5,9 +5,10 @@ export async function POST(request){
     const body=await request.json();
     if(!body.slug||!body.name?.trim()) return Response.json({error:"Event and name are required"},{status:400});
     const sql=getDb();
-    const events=await sql`SELECT id,registration_open,registration_deadline FROM events WHERE slug=${body.slug} LIMIT 1`;
+    const events=await sql`SELECT id,is_public,registration_open,registration_deadline FROM events WHERE slug=${body.slug} LIMIT 1`;
     if(!events.length)return Response.json({error:"Event not found"},{status:404});
     const event=events[0];
+    if(!event.is_public)return Response.json({error:"This event is not public yet"},{status:403});
     if(!event.registration_open)return Response.json({error:"Registration is currently closed"},{status:403});
     if(event.registration_deadline&&new Date(event.registration_deadline)<new Date())return Response.json({error:"Registration deadline has passed"},{status:403});
     let code=body.participantCode?.trim()||null;
