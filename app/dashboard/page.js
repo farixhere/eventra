@@ -11,6 +11,9 @@ const emptyProgramme = { name: "", category: "", type: "individual", maxParticip
 const emptyRegistration = { programmeId: "", participantId: "", teamId: "" };
 const emptySchedule = { programmeId: "", venueId: "", startsAt: "", endsAt: "" };
 const emptyResult = { programmeId: "", participantId: "", teamId: "", position: "", totalScore: "", points: "", published: false };
+const emptyAnnouncement = { title: "", body: "" };
+const emptyDownload = { title: "", description: "", fileUrl: "", fileType: "FILE" };
+const emptyMedia = { fileName: "", fileUrl: "", fileType: "image", category: "gallery", caption: "" };
 
 function formatDate(value) {
   if (!value) return "Date not set";
@@ -29,6 +32,13 @@ export default function Dashboard() {
   const [schedules, setSchedules] = useState([]);
   const [results, setResults] = useState([]);
   const [certificates, setCertificates] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [downloads, setDownloads] = useState([]);
+  const [media, setMedia] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [announcementForm, setAnnouncementForm] = useState(emptyAnnouncement);
+  const [downloadForm, setDownloadForm] = useState(emptyDownload);
+  const [mediaForm, setMediaForm] = useState(emptyMedia);
   const [scheduleForm, setScheduleForm] = useState(emptySchedule);
   const [resultForm, setResultForm] = useState(emptyResult);
   const [eventForm, setEventForm] = useState(emptyEvent);
@@ -83,6 +93,10 @@ export default function Dashboard() {
       if (section === "programmes") setProgrammes(data.programmes || []);
       if (section === "registrations") setRegistrations(data.registrations || []);
       if (section === "certificates") setCertificates(data.certificates || []);
+      if (section === "announcements") setAnnouncements(data.announcements || []);
+      if (section === "downloads") setDownloads(data.downloads || []);
+      if (section === "media") setMedia(data.media || []);
+      if (section === "contact") setMessages(data.messages || []);
       if (section === "results") {
         setResults(data.results || []);
         const [programmesResponse, participantsResponse, teamsResponse] = await Promise.all([
@@ -167,7 +181,7 @@ export default function Dashboard() {
   const registrationCount = registrations.length;
   const scheduleCount = schedules.length;
   const certificateCount = certificates.length;
-  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["results","Results"],["certificates","Certificates"]];
+  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["results","Results"],["certificates","Certificates"],["announcements","Announcements"],["downloads","Downloads"],["media","Gallery"],["contact","Contact"]];
 
   return (
     <main className="dashboardPage">
@@ -193,6 +207,7 @@ export default function Dashboard() {
   <div className="workspaceActions">
     {selectedEvent(events, selectedId) && <a href={"/event/" + selectedEvent(events, selectedId).slug} target="_blank" rel="noreferrer">View public site ↗</a>}
     <button onClick={() => { setError(""); setEventModalOpen(true); }}>+ New event</button>
+    {selectedEvent(events, selectedId) && <button onClick={async()=>{setSaving(true);setError("");try{const event=selectedEvent(events,selectedId);const response=await fetch("/api/events",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:event.id,isPublic:!event.is_public,status:!event.is_public?"live":"draft"})});const data=await response.json();if(!response.ok)throw new Error(data.error||"Unable to update publication");setEvents(events.map(x=>x.id===event.id?data.event:x));}catch(err){setError(err.message)}finally{setSaving(false)}}}>{selectedEvent(events,selectedId).is_public?"Unpublish site":"Publish site"} ↗</button>}
   </div>
 </div>
           {error && <div className="formError">{error}</div>}
@@ -297,6 +312,39 @@ export default function Dashboard() {
               </div>)}
             </div>}
           </div>}
+
+          {section === "announcements" && selectedEvent(events, selectedId) && <ResourcePanel title="Announcements" count={announcements.length} hint="Publish updates to the live event wall." loading={loadingSection}>
+            <form className="inlineForm" onSubmit={(e)=>{e.preventDefault();createResource("announcements",announcementForm,()=>setAnnouncementForm(emptyAnnouncement));}}>
+              <input value={announcementForm.title} onChange={e=>setAnnouncementForm({...announcementForm,title:e.target.value})} placeholder="Announcement title" required />
+              <input value={announcementForm.body} onChange={e=>setAnnouncementForm({...announcementForm,body:e.target.value})} placeholder="Write the announcement" required />
+              <button disabled={saving}>+ Add announcement</button>
+            </form>
+            <ResourceList items={announcements} kind="announcements" empty="No announcements yet." onDelete={removeResource} render={item=><><strong>{item.title}</strong><span>{item.published ? "Published" : "Draft"} · {item.body}</span></>} />
+          </ResourcePanel>}
+
+          {section === "downloads" && selectedEvent(events, selectedId) && <ResourcePanel title="Downloads" count={downloads.length} hint="Publish files and resources on the event website." loading={loadingSection}>
+            <form className="inlineForm" onSubmit={(e)=>{e.preventDefault();createResource("downloads",downloadForm,()=>setDownloadForm(emptyDownload));}}>
+              <input value={downloadForm.title} onChange={e=>setDownloadForm({...downloadForm,title:e.target.value})} placeholder="File title" required />
+              <input value={downloadForm.fileUrl} onChange={e=>setDownloadForm({...downloadForm,fileUrl:e.target.value})} placeholder="File URL" required />
+              <input value={downloadForm.description} onChange={e=>setDownloadForm({...downloadForm,description:e.target.value})} placeholder="Description" />
+              <button disabled={saving}>+ Add file</button>
+            </form>
+            <ResourceList items={downloads} kind="downloads" empty="No downloads yet." onDelete={removeResource} render={item=><><strong>{item.title}</strong><span>{item.published ? "Published" : "Draft"} · {item.file_type || "FILE"}</span></>} />
+          </ResourcePanel>}
+
+          {section === "media" && selectedEvent(events, selectedId) && <ResourcePanel title="Gallery" count={media.length} hint="Add media by URL, then publish it to the public gallery." loading={loadingSection}>
+            <form className="inlineForm" onSubmit={(e)=>{e.preventDefault();createResource("media",mediaForm,()=>setMediaForm(emptyMedia));}}>
+              <input value={mediaForm.fileName} onChange={e=>setMediaForm({...mediaForm,fileName:e.target.value})} placeholder="File name" required />
+              <input value={mediaForm.fileUrl} onChange={e=>setMediaForm({...mediaForm,fileUrl:e.target.value})} placeholder="Image / media URL" required />
+              <input value={mediaForm.caption} onChange={e=>setMediaForm({...mediaForm,caption:e.target.value})} placeholder="Caption" />
+              <button disabled={saving}>+ Add media</button>
+            </form>
+            <ResourceList items={media} kind="media" empty="No media yet." onDelete={removeResource} render={item=><><strong>{item.file_name}</strong><span>{item.published ? "Published" : "Draft"} · {item.caption || "No caption"}</span></>} />
+          </ResourcePanel>}
+
+          {section === "contact" && selectedEvent(events, selectedId) && <ResourcePanel title="Contact inbox" count={messages.length} hint="Review messages sent from the public event website." loading={loadingSection}>
+            <ResourceList items={messages} kind="contact" empty="No contact messages yet." onDelete={removeResource} render={item=><><strong>{item.subject || "No subject"} · {item.name}</strong><span>{item.email} · {item.status} · {item.message}</span></>} />
+          </ResourcePanel>}
 
           {section === "participants" && selectedEvent(events, selectedId) && <ResourcePanel title="Participants" count={participants.length} hint="People taking part in this event." loading={loadingSection}><form className="participantForm" onSubmit={(e) => { e.preventDefault(); createResource("participants", participantForm, () => setParticipantForm(emptyParticipant)); }}><input value={participantForm.name} onChange={(e) => setParticipantForm({...participantForm,name:e.target.value})} placeholder="Full name" required /><input type="email" value={participantForm.email} onChange={(e) => setParticipantForm({...participantForm,email:e.target.value})} placeholder="Email (optional)" /><input value={participantForm.phone} onChange={(e) => setParticipantForm({...participantForm,phone:e.target.value})} placeholder="Phone (optional)" /><select value={participantForm.teamId} onChange={(e) => setParticipantForm({...participantForm,teamId:e.target.value})}><option value="">No team</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select><input value={participantForm.participantCode} onChange={(e) => setParticipantForm({...participantForm,participantCode:e.target.value})} placeholder="Code (auto if blank)" /><button disabled={saving}>+ Add participant</button></form><ResourceList items={participants} kind="participants" empty="No participants added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.participant_code} {item.team_name ? "· " + item.team_name : "· No team"}</span></>} /></ResourcePanel>}
         </section>
