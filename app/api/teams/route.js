@@ -43,3 +43,25 @@ export async function DELETE(request) {
     return Response.json({ error: "Unable to delete team" }, { status: 500 });
   }
 }
+
+
+export async function PATCH(request) {
+  try {
+    const body = await request.json();
+    if (!body.id) return Response.json({ error: "id is required" }, { status: 400 });
+    const sql = getDb();
+    const rows = await sql`
+      UPDATE teams
+      SET name=COALESCE(NULLIF(TRIM(${body.name || ""}),''),name),
+          code=CASE WHEN ${body.code === undefined} THEN code ELSE NULLIF(TRIM(${body.code || ""}),'') END,
+          description=CASE WHEN ${body.description === undefined} THEN description ELSE NULLIF(TRIM(${body.description || ""}),'') END
+      WHERE id=${body.id}
+      RETURNING id,name,code,description,created_at
+    `;
+    if (!rows[0]) return Response.json({ error: "Team not found" }, { status: 404 });
+    return Response.json({ team: rows[0] });
+  } catch (error) {
+    console.error("PATCH /api/teams failed", error);
+    return Response.json({ error: "Unable to update team" }, { status: 500 });
+  }
+}
