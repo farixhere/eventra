@@ -25,6 +25,10 @@ export async function POST(request) {
     const body = await request.json();
     if (!body.eventId || !body.participantId) return Response.json({ error: "Event and participant are required" }, { status: 400 });
     const sql = getDb();
+    const participant = await sql`SELECT id FROM participants WHERE id=${body.participantId} AND event_id=${body.eventId}`;
+    if (!participant[0]) return Response.json({ error: "Participant does not belong to this event" }, { status: 400 });
+    const existing = await sql`SELECT id FROM id_cards WHERE event_id=${body.eventId} AND participant_id=${body.participantId}`;
+    if (existing[0]) return Response.json({ error: "An ID card already exists for this participant" }, { status: 409 });
     const number = body.cardNumber?.trim() || makeNumber();
     const rows = await sql`
       INSERT INTO id_cards (event_id, participant_id, card_number, file_url)
