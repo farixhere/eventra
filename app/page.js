@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const features = [
-  { n: "01", title: "Build your event", text: "Create festivals, competitions and campus events with a clean organizer workspace." },
+  { n: "01", title: "Build your event", text: "Create festivals, campus events and programmes with a clean organizer workspace." },
   { n: "02", title: "Manage programmes", text: "Keep programmes, participants, teams and venues organized in one system." },
   { n: "03", title: "Publish instantly", text: "Give every event a polished public page for schedules, results and announcements." }
 ];
@@ -14,14 +14,14 @@ export default function Home() {
         <div className="navLinks">
           <a href="#features">Features</a>
           <a href="#how">How it works</a>
-          <Link className="navButton" href="/dashboard">Open dashboard</Link>
+          <Link className="navButton" href="/dashboard">Open dashboard</Link><Link className="navButton" href="/dashboard/studio">Event Studio</Link>
         </div>
       </nav>
 
       <section className="hero">
         <div className="eyebrow">EVENT MANAGEMENT, REBUILT</div>
         <h1>Run the event.<br /><em>Not the chaos.</em></h1>
-        <p className="heroText">Eventra gives organizers one calm command center for festivals, competitions, participants, schedules and results.</p>
+        <p className="heroText">Eventra gives organizers one calm command center for festivals, participants, schedules, programmes, documents and published results.</p>
         <div className="heroActions">
           <Link className="primary" href="/dashboard">Start organizing <span>→</span></Link>
           <a className="secondary" href="#features">Explore Eventra</a>
