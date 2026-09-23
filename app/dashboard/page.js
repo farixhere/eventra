@@ -329,7 +329,7 @@ export default function Dashboard() {
               <input value={announcementForm.body} onChange={e=>setAnnouncementForm({...announcementForm,body:e.target.value})} placeholder="Write the announcement" required />
               <button disabled={saving}>+ Add announcement</button>
             </form>
-            <ResourceList items={announcements} kind="announcements" empty="No announcements yet." onDelete={removeResource} render={item=><><strong>{item.title}</strong><span>{item.published ? "Published" : "Draft"} · {item.body}</span></>} />
+            <ResourceList items={announcements} kind="announcements" empty="No announcements yet." onDelete={removeResource} onPublish={togglePublished} render={item=><><strong>{item.title}</strong><span>{item.published ? "Published" : "Draft"} · {item.body}</span></>} />
           </ResourcePanel>}
 
           {section === "downloads" && selectedEvent(events, selectedId) && <ResourcePanel title="Downloads" count={downloads.length} hint="Publish files and resources on the event website." loading={loadingSection}>
@@ -339,7 +339,7 @@ export default function Dashboard() {
               <input value={downloadForm.description} onChange={e=>setDownloadForm({...downloadForm,description:e.target.value})} placeholder="Description" />
               <button disabled={saving}>+ Add file</button>
             </form>
-            <ResourceList items={downloads} kind="downloads" empty="No downloads yet." onDelete={removeResource} render={item=><><strong>{item.title}</strong><span>{item.published ? "Published" : "Draft"} · {item.file_type || "FILE"}</span></>} />
+            <ResourceList items={downloads} kind="downloads" empty="No downloads yet." onDelete={removeResource} onPublish={togglePublished} render={item=><><strong>{item.title}</strong><span>{item.published ? "Published" : "Draft"} · {item.file_type || "FILE"}</span></>} />
           </ResourcePanel>}
 
           {section === "media" && selectedEvent(events, selectedId) && <ResourcePanel title="Gallery" count={media.length} hint="Add media by URL, then publish it to the public gallery." loading={loadingSection}>
@@ -349,7 +349,7 @@ export default function Dashboard() {
               <input value={mediaForm.caption} onChange={e=>setMediaForm({...mediaForm,caption:e.target.value})} placeholder="Caption" />
               <button disabled={saving}>+ Add media</button>
             </form>
-            <ResourceList items={media} kind="media" empty="No media yet." onDelete={removeResource} render={item=><><strong>{item.file_name}</strong><span>{item.published ? "Published" : "Draft"} · {item.caption || "No caption"}</span></>} />
+            <ResourceList items={media} kind="media" empty="No media yet." onDelete={removeResource} onPublish={togglePublished} render={item=><><strong>{item.file_name}</strong><span>{item.published ? "Published" : "Draft"} · {item.caption || "No caption"}</span></>} />
           </ResourcePanel>}
 
           {section === "contact" && selectedEvent(events, selectedId) && <ResourcePanel title="Contact inbox" count={messages.length} hint="Review messages sent from the public event website." loading={loadingSection}>
@@ -367,7 +367,7 @@ export default function Dashboard() {
 
 function selectedEvent(events, id) { return events.find((event) => event.id === id) || null; }
 function ResourcePanel({ title, count, hint, loading, children }) { return <div className="resourcePanel"><div className="resourceHeader"><div><small>EVENT MANAGEMENT</small><h2>{title}</h2><p>{hint}</p></div><span className="resourceCount">{count}</span></div>{children}{loading && <div className="eventEmpty">Loading…</div>}</div>; }
-function ResourceList({ items, kind, empty, onDelete, render }) {
+function ResourceList({ items, kind, empty, onDelete, onPublish, render }) {
   if (!items.length) return <div className="eventEmpty">{empty}</div>;
-  return <div className="resourceList">{items.map((item) => <div className="resourceRow" key={item.id}><div>{render(item)}</div><div className="resourceActions">{typeof item.published === "boolean" && <button onClick={() => togglePublished(kind, item.id, item.published)}>{item.published ? "Unpublish" : "Publish"}</button>}<button onClick={() => onDelete(kind, item.id)}>Delete</button></div></div>)}</div>;
+  return <div className="resourceList">{items.map((item) => <div className="resourceRow" key={item.id}><div>{render(item)}</div><div className="resourceActions">{typeof item.published === "boolean" && onPublish && <button onClick={() => onPublish(kind, item.id, item.published)}>{item.published ? "Unpublish" : "Publish"}</button>}<button onClick={() => onDelete(kind, item.id)}>Delete</button></div></div>)}</div>;
 }
