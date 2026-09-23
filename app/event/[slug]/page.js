@@ -9,6 +9,7 @@ export default async function EventPage({ params }) {
   const events = await sql`SELECT id,name,slug,description,tagline,start_date,end_date,location,status,logo_url,banner_url,primary_color,secondary_color,is_public,registration_open,registration_deadline FROM events WHERE slug=${slug} LIMIT 1`;
   if (!events.length) notFound();
   const event = events[0];
+  if (!event.is_public) notFound();
 
   const [programmes, schedules, announcements, results, participants, teams, venues, media] = await Promise.all([
     sql`SELECT id,name,category,type,max_participants,description,rules,status FROM programmes WHERE event_id=${event.id} ORDER BY category NULLS LAST,name`,
