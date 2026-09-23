@@ -194,7 +194,7 @@ export default function Dashboard() {
   const scheduleCount = schedules.length;
   const certificateCount = certificates.length;
   const idCardCount = idCards.length;
-  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["results","Results"],["certificates","Certificates"],["announcements","Announcements"],["downloads","Downloads"],["media","Gallery"],["contact","Contact"]];
+  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["results","Results"],["certificates","Certificates"],["id-cards","ID Cards"],["announcements","Announcements"],["downloads","Downloads"],["media","Gallery"],["contact","Contact"]];
 
   return (
     <main className="dashboardPage">
