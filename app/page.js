@@ -54,11 +54,11 @@ export default function Home() {
 
       <section className="how" id="how">
         <span>ONE WORKFLOW</span>
-        <h2>From idea to <em>results.</em></h2>
+        <h2>From setup to <em>published results.</em></h2>
         <div className="steps"><div><b>01</b><strong>Create</strong><p>Set up your event and choose what you need.</p></div><div><b>02</b><strong>Operate</strong><p>Run programmes, participants, schedules and judging.</p></div><div><b>03</b><strong>Publish</strong><p>Share a beautiful public event experience.</p></div></div>
       </section>
 
-      <footer><span className="brand">eventra<span>.</span></span><span>Built for people who run events.</span></footer>
+      <footer><span className="brand">eventra<span>.</span></span><span>Operate programmes, participants, schedules and event results.</span></footer>
     </main>
   );
 }
