@@ -296,7 +296,7 @@ export default function Dashboard() {
                 <div className="certificateBadge">CERT</div>
                 <div className="certificateInfo"><strong>{item.recipient_name}</strong><span>{item.programme_name}{item.team_name ? " · " + item.team_name : ""} · Position #{item.position}</span></div>
                 <div className="certificateScore"><strong>{item.points ?? 0}</strong><span>points</span></div>
-                <button className="certificateAction" type="button" onClick={() => window.alert("Certificate generation is the next document step. This result is ready.")}>Prepare</button>
+                <button className="certificateAction" type="button" onClick={async () => { setSaving(true); setError(""); try { const response = await fetch("/api/certificates", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ eventId: selectedId, resultId: item.result_id, participantId: item.participant_id, teamId: item.team_id, title: item.programme_name + " — " + (item.recipient_name || "Participant"), certificateType: item.position === 1 ? "winner" : "achievement" }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to prepare certificate"); await loadSectionData(); } catch (err) { setError(err.message); } finally { setSaving(false); } }}>{item.certificate_number ? "Prepared" : "Prepare"}</button>
               </div>)}
             </div>}
           </div>}
