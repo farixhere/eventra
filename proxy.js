@@ -10,7 +10,7 @@ const PUBLIC_API = new Set([
 async function proxy(request) {
   const { pathname } = request.nextUrl;
 
-  if (pathname === "/dashboard/login") return NextResponse.next();
+  if (pathname === "/admin-login" || pathname === "/dashboard/login") return NextResponse.next();
   if (PUBLIC_API.has(pathname)) return NextResponse.next();
   if (pathname === "/api/contact" && request.method === "POST") return NextResponse.next();
 
