@@ -40,6 +40,14 @@ export async function POST(request) {
     const teamId = body.teamId || null;
     if (programme.type === "team" && !teamId) return Response.json({ error: "Select a team for this programme" }, { status: 400 });
     if (programme.type === "individual" && !participantId) return Response.json({ error: "Select a participant for this programme" }, { status: 400 });
+    if (teamId) {
+      const team = await sql`SELECT id FROM teams WHERE id = ${teamId} AND event_id = ${body.eventId}`;
+      if (!team[0]) return Response.json({ error: "Selected team does not belong to this event" }, { status: 400 });
+    }
+    if (participantId) {
+      const participant = await sql`SELECT id FROM participants WHERE id = ${participantId} AND event_id = ${body.eventId}`;
+      if (!participant[0]) return Response.json({ error: "Selected participant does not belong to this event" }, { status: 400 });
+    }
     const duplicate = await sql`SELECT id FROM results WHERE programme_id = ${body.programmeId} AND COALESCE(participant_id::text, '') = COALESCE(${participantId}::text, '') AND COALESCE(team_id::text, '') = COALESCE(${teamId}::text, '')`;
     if (duplicate[0]) return Response.json({ error: "A result already exists for this entry" }, { status: 409 });
     const rows = await sql`
