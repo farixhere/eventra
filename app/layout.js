@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./eventra-expansion.css";
 
 export const metadata = {
   title: "Eventra — Festival Management",
