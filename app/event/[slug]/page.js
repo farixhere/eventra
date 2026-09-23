@@ -36,7 +36,7 @@ export default async function EventPage({ params }) {
       <h1>{event.name}</h1>
       <p>{event.tagline || event.description || "A complete festival experience powered by Eventra."}</p>
       <div className="publicMeta"><span>📍 {event.location || "Venue to be announced"}</span><span>◷ {dateText}{endText}</span></div>
-      <div className="publicQuickLinks"><a href={"/event/"+event.slug+"/results"}>Results ↗</a><a href={"/event/"+event.slug+"/candidate"}>My Result ↗</a><a href={"/event/"+event.slug+"/schedules"}>Full Schedule ↗</a><a href={"/event/"+event.slug+"/downloads"}>Downloads ↗</a><a href={"/event/"+event.slug+"/wall"}>Wall ↗</a></div>
+      <div className="publicQuickLinks"><a href={"/event/"+event.slug+"/results"}>Results ↗</a><a href={"/event/"+event.slug+"/candidate"}>My Result ↗</a><a href={"/event/"+event.slug+"/schedules"}>Full Schedule ↗</a><a href={"/event/"+event.slug+"/downloads"}>Downloads ↗</a><a href={"/event/"+event.slug+"/wall"}>Wall ↗</a>{event.registration_open && <a href={"/event/"+event.slug+"/register"}>Register ↗</a>}</div>
     </section>
 
     {announcements.length > 0 && <section className="publicSection"><div className="publicSectionTitle"><small>UPDATES</small><h2>Latest announcements</h2></div><div className="announcementGrid">{announcements.map(a=><article className="announcementCard" key={a.id}><small>{new Date(a.created_at).toLocaleDateString("en-IN")}</small><h3>{a.title}</h3><p>{a.body}</p></article>)}</div></section>}
