@@ -32,6 +32,7 @@ export default function Dashboard() {
   const [schedules, setSchedules] = useState([]);
   const [results, setResults] = useState([]);
   const [certificates, setCertificates] = useState([]);
+  const [idCards, setIdCards] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [downloads, setDownloads] = useState([]);
   const [media, setMedia] = useState([]);
@@ -93,6 +94,7 @@ export default function Dashboard() {
       if (section === "programmes") setProgrammes(data.programmes || []);
       if (section === "registrations") setRegistrations(data.registrations || []);
       if (section === "certificates") setCertificates(data.certificates || []);
+      if (section === "id-cards") setIdCards(data.cards || []);
       if (section === "announcements") setAnnouncements(data.announcements || []);
       if (section === "downloads") setDownloads(data.downloads || []);
       if (section === "media") setMedia(data.media || []);
@@ -191,6 +193,7 @@ export default function Dashboard() {
   const registrationCount = registrations.length;
   const scheduleCount = schedules.length;
   const certificateCount = certificates.length;
+  const idCardCount = idCards.length;
   const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["results","Results"],["certificates","Certificates"],["announcements","Announcements"],["downloads","Downloads"],["media","Gallery"],["contact","Contact"]];
 
   return (
