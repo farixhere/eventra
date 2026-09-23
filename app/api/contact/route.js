@@ -19,13 +19,18 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    if (!body.eventId || !body.name?.trim() || !body.email?.trim() || !body.message?.trim()) {
-      return Response.json({ error: "Name, email and message are required" }, { status: 400 });
+    if ((!body.eventId && !body.eventSlug) || !body.name?.trim() || !body.email?.trim() || !body.message?.trim()) {
+      return Response.json({ error: "Event, name, email and message are required" }, { status: 400 });
     }
     const sql = getDb();
+    const eventRows = body.eventId
+      ? await sql`SELECT id, is_public FROM events WHERE id=${body.eventId} LIMIT 1`
+      : await sql`SELECT id, is_public FROM events WHERE slug=${body.eventSlug} LIMIT 1`;
+    if (!eventRows.length) return Response.json({ error: "Event not found" }, { status: 404 });
+    if (!eventRows[0].is_public) return Response.json({ error: "This event is not public yet" }, { status: 403 });
     const rows = await sql`
       INSERT INTO contact_messages (event_id, name, email, subject, message)
-      VALUES (${body.eventId}, ${body.name.trim()}, ${body.email.trim()}, ${body.subject?.trim() || null}, ${body.message.trim()})
+      VALUES (${eventRows[0].id}, ${body.name.trim()}, ${body.email.trim()}, ${body.subject?.trim() || null}, ${body.message.trim()})
       RETURNING *
     `;
     return Response.json({ message: rows[0] }, { status: 201 });
