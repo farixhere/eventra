@@ -11,7 +11,6 @@ const emptyProgramme = { name: "", category: "", type: "individual", maxParticip
 const emptyRegistration = { programmeId: "", participantId: "", teamId: "" };
 const emptySchedule = { programmeId: "", venueId: "", startsAt: "", endsAt: "" };
 const emptyResult = { programmeId: "", participantId: "", teamId: "", position: "", totalScore: "", points: "", published: false };
-const emptyJudge = { name: "", email: "" };
 
 function formatDate(value) {
   if (!value) return "Date not set";
@@ -29,11 +28,9 @@ export default function Dashboard() {
   const [registrations, setRegistrations] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [results, setResults] = useState([]);
-  const [judges, setJudges] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [scheduleForm, setScheduleForm] = useState(emptySchedule);
   const [resultForm, setResultForm] = useState(emptyResult);
-  const [judgeForm, setJudgeForm] = useState(emptyJudge);
   const [eventForm, setEventForm] = useState(emptyEvent);
   const [venueForm, setVenueForm] = useState(emptyVenue);
   const [teamForm, setTeamForm] = useState(emptyTeam);
@@ -84,7 +81,6 @@ export default function Dashboard() {
       if (section === "participants") setParticipants(data.participants || []);
       if (section === "programmes") setProgrammes(data.programmes || []);
       if (section === "registrations") setRegistrations(data.registrations || []);
-      if (section === "judges") setJudges(data.judges || []);
       if (section === "certificates") setCertificates(data.certificates || []);
       if (section === "results") {
         setResults(data.results || []);
@@ -169,9 +165,8 @@ export default function Dashboard() {
   const resultCount = results.filter((item) => item.published).length;
   const registrationCount = registrations.length;
   const scheduleCount = schedules.length;
-  const judgeCount = judges.length;
   const certificateCount = certificates.length;
-  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["judges","Judges"],["results","Results"],["certificates","Certificates"]];
+  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["results","Results"],["certificates","Certificates"]];
 
   return (
     <main className="dashboardPage">
@@ -182,9 +177,9 @@ export default function Dashboard() {
   <small>EVENT SETUP</small>
   {nav.slice(0,5).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span>{key === "events" ? <b>⌂</b> : key === "venues" ? <b>⌁</b> : key === "teams" ? <b>◌</b> : key === "participants" ? <b>◎</b> : <b>▦</b>}</button>)}
   <small className="space">OPERATIONS</small>
-  {nav.slice(5,8).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "registrations" ? "↳" : key === "schedules" ? "◷" : key === "judges" ? "♢" : "✦"}</b></button>)}
+  {nav.slice(5,7).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "registrations" ? "↳" : key === "schedules" ? "◷" : "✦"}</b></button>)}
   <small className="space">RESULTS & DOCUMENTS</small>
-  {nav.slice(8).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "results" ? "◈" : "□"}</b></button>)}
+  {nav.slice(7).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "results" ? "◈" : "□"}</b></button>)}
   <div className="sideBottom"><button>⚙ <span>Settings</span></button><Link href="/">↗ <span>View website</span></Link></div>
 </aside>
         <section className="workspace">
@@ -203,7 +198,7 @@ export default function Dashboard() {
           <div className="statGrid">
   <div className="stat statAccent"><small>Events</small><strong>{events.length.toString().padStart(2,"0")}</strong><span>{events.filter((event) => event.status === "live").length} live now</span></div>
   <div className="stat"><small>Participants</small><strong>{participantCount.toLocaleString()}</strong><span>Registered in event</span></div>
-  <div className="stat"><small>Programmes</small><strong>{programmeCount}</strong><span>Competitions & activities</span></div>
+  <div className="stat"><small>Programmes</small><strong>{programmeCount}</strong><span>Programmes & activities</span></div>
   <div className="stat"><small>Published results</small><strong>{resultCount}</strong><span>Ready for public view</span></div>
 </div>
 {selectedEvent(events, selectedId) && <div className="commandStrip">
@@ -268,15 +263,6 @@ export default function Dashboard() {
             </div>}
           </div>}
 
-          {section === "judges" && selectedEvent(events, selectedId) && <ResourcePanel title="Judges" count={judges.length} hint="Officials and event staff." loading={loadingSection}>
-            <form className="judgeForm" onSubmit={(e) => { e.preventDefault(); createResource("judges", judgeForm, () => setJudgeForm(emptyJudge)); }}>
-              <input value={judgeForm.name} onChange={(e) => setJudgeForm({...judgeForm,name:e.target.value})} placeholder="Judge name" required />
-              <input type="email" value={judgeForm.email} onChange={(e) => setJudgeForm({...judgeForm,email:e.target.value})} placeholder="Email (optional)" />
-              <button disabled={saving}>{saving ? "Adding…" : "+ Add judge"}</button>
-            </form>
-            <ResourceList items={judges} kind="judges" empty="No judges added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.email || "No email added"}</span></>} />
-          </ResourcePanel>}
-
           {section === "certificates" && selectedEvent(events, selectedId) && <div className="certificatePanel">
             <div className="certificateHeader"><div><small>EVENT DOCUMENTS</small><h2>Certificates</h2><p>Prepare certificates from published event results.</p></div><div className="certificateHeaderMeta"><strong>{certificateCount.toString().padStart(2,"0")}</strong><span>eligible</span></div></div>
             {loadingSection ? <div className="eventEmpty">Loading certificates…</div> : !certificates.length ? <div className="eventEmpty"><strong>No certificates ready yet.</strong><span>Publish results first. Eligible participants and teams will appear here.</span></div> : <div className="certificateList">
@@ -290,16 +276,16 @@ export default function Dashboard() {
           </div>}
 
           {section === "results" && selectedEvent(events, selectedId) && <div className="resultPanel">
-            <div className="resultHeader"><div><small>EVENT MANAGEMENT</small><h2>Results</h2><p>Manually add final results, then publish them to the public event website.</p></div><div className="resultHeaderTools"><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div><button type="button" className="resultManualButton" onClick={() => setOpen((value) => !value)}>+ Manual result</button></div></div>
+            <div className="resultHeader"><div><small>MANUAL RESULTS</small><h2>Results</h2><p>Enter the final result yourself. Nothing is calculated automatically.</p></div><div className="resultHeaderTools"><div className="resultHeaderMeta"><strong>{resultCount.toString().padStart(2,"0")}</strong><span>published</span></div><button type="button" className="resultManualButton" onClick={() => setOpen((value) => !value)}>+ Manual result</button></div></div>
             {open && <form className="resultForm" onSubmit={async (e) => { e.preventDefault(); setSaving(true); setError(""); try { const response = await fetch("/api/results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...resultForm, eventId: selectedId, published: false }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to create result"); setResultForm(emptyResult); setOpen(false); await loadSectionData(); } catch (err) { setError(err.message); } finally { setSaving(false); } }}>
               <div className="resultField"><label>Programme</label><select value={resultForm.programmeId} onChange={(e) => { const programmeId=e.target.value; setResultForm({...resultForm,programmeId,participantId:"",teamId:""}); }} required><option value="">Choose programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name} · {p.type}</option>)}</select></div>
               <div className="resultField"><label>Entry</label>{programmes.find((p)=>p.id===resultForm.programmeId)?.type === "team" ? <select value={resultForm.teamId} onChange={(e)=>setResultForm({...resultForm,teamId:e.target.value})} required><option value="">Choose team</option>{teams.map((t)=><option key={t.id} value={t.id}>{t.name}</option>)}</select> : <select value={resultForm.participantId} onChange={(e)=>setResultForm({...resultForm,participantId:e.target.value})} required><option value="">Choose participant</option>{participants.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select>}</div>
               <div className="resultField"><label>Position</label><input type="number" min="1" value={resultForm.position} onChange={(e)=>setResultForm({...resultForm,position:e.target.value})} placeholder="1" required /></div>
-              <div className="resultField"><label>Total score</label><input type="number" min="0" step="0.01" value={resultForm.totalScore} onChange={(e)=>setResultForm({...resultForm,totalScore:e.target.value})} placeholder="0" /></div>
-              <div className="resultField"><label>Prize points</label><input type="number" min="0" step="0.01" value={resultForm.points} onChange={(e)=>setResultForm({...resultForm,points:e.target.value})} placeholder="0" /></div>
+              <div className="resultField"><label>Final score <span className="resultOptional">optional</span></label><input type="number" min="0" step="0.01" value={resultForm.totalScore} onChange={(e)=>setResultForm({...resultForm,totalScore:e.target.value})} placeholder="0" /></div>
+              <div className="resultField"><label>Points <span className="resultOptional">optional</span></label><input type="number" min="0" step="0.01" value={resultForm.points} onChange={(e)=>setResultForm({...resultForm,points:e.target.value})} placeholder="0" /></div>
               <button disabled={saving}>{saving ? "Saving…" : "Save result"}</button>
             </form>}
-            {loadingSection ? <div className="eventEmpty">Loading results…</div> : !results.length ? <div className="eventEmpty"><strong>No results yet.</strong><span>Click “Manual result” to add a final result.</span></div> : <div className="resultList">
+            {loadingSection ? <div className="eventEmpty">Loading results…</div> : !results.length ? <div className="eventEmpty"><strong>No results yet.</strong><span>Click “Manual result” to add an official result, then publish it when ready.</span></div> : <div className="resultList">
               {results.map((item) => <div className="resultRow" key={item.id}>
                 <div className="resultPosition"><strong>#{item.position}</strong><span>{item.published ? "Published" : "Draft"}</span></div>
                 <div className="resultInfo"><strong>{item.entry_name}</strong><span>{item.programme_name}{item.team_name ? " · " + item.team_name : ""}</span></div>
