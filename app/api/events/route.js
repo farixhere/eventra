@@ -4,12 +4,11 @@ function makeSlug(value) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-const eventFields = "id,name,slug,description,start_date,end_date,location,status,tagline,logo_url,banner_url,website_theme,primary_color,secondary_color,is_public,registration_open,registration_deadline,created_at";
 
 export async function GET() {
   try {
     const sql = getDb();
-    const events = await sql`SELECT ${sql.unsafe(eventFields)} FROM events ORDER BY created_at DESC`;
+    const events = await sql`SELECT id,name,slug,description,start_date,end_date,location,status,tagline,logo_url,banner_url,website_theme,primary_color,secondary_color,is_public,registration_open,registration_deadline,created_at FROM events ORDER BY created_at DESC`;
     return Response.json({ events });
   } catch (error) {
     console.error("GET /api/events failed", error);
@@ -26,7 +25,7 @@ export async function POST(request) {
     const organizerRows = await sql`INSERT INTO organizers (email, name) VALUES ('owner@eventra.local', 'Eventra Organizer') ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name RETURNING id`;
     const baseSlug = makeSlug(name) || "event";
     const slug = `${baseSlug}-${Date.now().toString(36)}`;
-    const rows = await sql`INSERT INTO events (organizer_id,name,slug,description,start_date,end_date,location,status,tagline,logo_url,banner_url,website_theme,primary_color,secondary_color,is_public,registration_open,registration_deadline) VALUES (${organizerRows[0].id},${name},${slug},${body.description?.trim() || null},${body.startDate || null},${body.endDate || null},${body.location?.trim() || null},'draft',${body.tagline?.trim() || null},${body.logoUrl?.trim() || null},${body.bannerUrl?.trim() || null},${body.websiteTheme || "eventra"},${body.primaryColor || "#d7ff3f"},${body.secondaryColor || "#111111"},${Boolean(body.isPublic)},${Boolean(body.registrationOpen)},${body.registrationDeadline || null}) RETURNING ${sql.unsafe(eventFields)}`;
+    const rows = await sql`INSERT INTO events (organizer_id,name,slug,description,start_date,end_date,location,status,tagline,logo_url,banner_url,website_theme,primary_color,secondary_color,is_public,registration_open,registration_deadline) VALUES (${organizerRows[0].id},${name},${slug},${body.description?.trim() || null},${body.startDate || null},${body.endDate || null},${body.location?.trim() || null},'draft',${body.tagline?.trim() || null},${body.logoUrl?.trim() || null},${body.bannerUrl?.trim() || null},${body.websiteTheme || "eventra"},${body.primaryColor || "#d7ff3f"},${body.secondaryColor || "#111111"},${Boolean(body.isPublic)},${Boolean(body.registrationOpen)},${body.registrationDeadline || null}) RETURNING id,name,slug,description,start_date,end_date,location,status,tagline,logo_url,banner_url,website_theme,primary_color,secondary_color,is_public,registration_open,registration_deadline,created_at`;
     return Response.json({ event: rows[0] }, { status: 201 });
   } catch (error) {
     console.error("POST /api/events failed", error);
