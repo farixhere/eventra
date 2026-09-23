@@ -142,3 +142,37 @@
 
 /* Festie-inspired public information layer */
 .compactHero{padding-bottom:55px}.publicQuickLinks{display:flex;gap:8px;flex-wrap:wrap;margin-top:32px}.publicQuickLinks a,.publicInlineLink{display:inline-flex;align-items:center;border:1px solid #d9d5cc;background:#fff;padding:10px 13px;border-radius:100px;font:700 10px 'DM Mono';color:#171714;text-decoration:none}.publicQuickLinks a:hover,.publicInlineLink:hover{transform:translateY(-1px);background:#eeeae1}.publicSplit{display:grid;grid-template-columns:1fr 1fr;gap:70px}.miniList{border-top:1px solid #dedbd2}.miniList>div{display:flex;justify-content:space-between;gap:20px;padding:15px 0;border-bottom:1px solid #dedbd2}.miniList strong{font-size:13px}.miniList span{font:10px 'DM Mono';color:#8b887f}.publicInlineLink{margin-top:25px}.publicNotice{border:1px solid #e5d3b6;background:#fff9ed;padding:18px;border-radius:10px;font-size:13px}.publicSearch{display:flex;max-width:620px;gap:8px;margin-top:30px}.publicSearch input{flex:1;min-height:48px;border:1px solid #d9d5cc;border-radius:8px;padding:0 14px;background:#fff;font:13px Manrope}.publicSearch button{border:0;border-radius:8px;background:#171714;color:#fff;padding:0 20px;font-weight:700}.candidateCard{border:1px solid #dedbd2;background:#fff;padding:25px;margin-bottom:20px}.candidateCard small{font:9px 'DM Mono';color:#8b887f;letter-spacing:1.5px}.candidateCard h2{font-size:30px;letter-spacing:-1px;margin:9px 0}.candidateCard span{font:10px 'DM Mono';color:#77736b}.publicResultGroup+.publicResultGroup{margin-top:70px}.scheduleFilters{display:flex;gap:8px;overflow:auto;padding-bottom:25px}.scheduleFilters a{white-space:nowrap;border:1px solid #dedbd2;padding:9px 13px;border-radius:100px;font:10px 'DM Mono';color:#69665f;text-decoration:none;background:#fff}.scheduleFilters a.active{background:#171714;color:#fff;border-color:#171714}.publicScheduleLight{background:#fff;border:1px solid #dedbd2;padding:0 24px}.downloadGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.downloadCard{background:#fff;border:1px solid #e1ded6;padding:25px;text-decoration:none;color:#171714;min-height:180px;display:flex;flex-direction:column}.downloadCard small{font:9px 'DM Mono';color:#8b887f;letter-spacing:1px}.downloadCard h3{font-size:18px;margin:18px 0 7px}.downloadCard p{font-size:11px;color:#8b887f;line-height:1.6}.downloadCard span{margin-top:auto;font:700 10px 'DM Mono'}.publicEvent a{transition:.15s}.publicEvent a:focus-visible{outline:2px solid #7567f8;outline-offset:2px}@media(max-width:760px){.publicNav{height:auto;min-height:64px;padding:12px 18px;align-items:flex-start}.publicNav div{flex-wrap:wrap;justify-content:flex-end;gap:8px}.publicHero{padding:72px 20px 60px}.publicQuickLinks a{font-size:9px}.publicSplit{grid-template-columns:1fr;gap:50px}.publicSearch{flex-direction:column}.publicSearch button{min-height:46px}.downloadGrid{grid-template-columns:1fr}.publicScheduleLight{padding:0 15px}.miniList>div{align-items:flex-start}.compactHero h1{font-size:52px}}
+
+
+/* Admin login */
+.adminLoginPage{min-height:100vh;position:relative;overflow:hidden;background:#f5f3ed;display:grid;place-items:center;padding:28px 20px;color:#171714}
+.adminLoginGlow{position:absolute;border-radius:50%;filter:blur(2px);pointer-events:none}
+.adminLoginGlowOne{width:520px;height:520px;top:-300px;right:-180px;background:#dfff70aa}
+.adminLoginGlowTwo{width:430px;height:430px;bottom:-300px;left:-170px;background:#7567f826}
+.adminLoginShell{position:relative;z-index:1;width:min(100%,470px)}
+.adminLoginBrand{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;padding:0 4px}
+.adminLoginLogo{font-size:24px;font-weight:900;letter-spacing:-1.8px;color:#171714;text-decoration:none}
+.adminLoginLogo span{color:#7567f8}
+.adminLoginBadge{font:700 9px 'DM Mono';letter-spacing:1.4px;color:#77736b;border:1px solid #d8d3c8;border-radius:100px;padding:7px 10px;background:#ffffffb8}
+.adminLoginCard{background:#fffdf9;border:1px solid #ded9cf;border-radius:20px;padding:42px;box-shadow:0 28px 80px #1717141c}
+.adminLoginIcon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:#171714;color:#dfff70;font-size:25px;font-weight:900;margin-bottom:25px;box-shadow:0 10px 24px #17171418}
+.adminLoginEyebrow{font:700 9px 'DM Mono';letter-spacing:1.8px;color:#7567f8;margin-bottom:9px}
+.adminLoginCard h1{font-size:46px;line-height:1;letter-spacing:-3px;margin:0 0 12px}
+.adminLoginIntro{margin:0 0 30px;color:#77736b;font-size:13px;line-height:1.65;max-width:370px}
+.adminLoginField{display:block}
+.adminLoginField>span{display:block;font:700 10px 'DM Mono';letter-spacing:1px;text-transform:uppercase;margin-bottom:9px;color:#5e5a53}
+.adminLoginField input{width:100%;height:52px;border:1px solid #d5d0c6;border-radius:10px;background:#fff;padding:0 15px;font:14px Manrope;color:#171714;outline:none;box-sizing:border-box;transition:.18s}
+.adminLoginField input:focus{border-color:#7567f8;box-shadow:0 0 0 4px #7567f814}
+.adminLoginField input::placeholder{color:#aaa59b}
+.adminLoginButton{width:100%;height:52px;margin-top:14px;border:0;border-radius:10px;background:#171714;color:#fff;font:800 11px 'DM Mono';letter-spacing:.4px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:.18s;box-shadow:0 10px 22px #1717141c}
+.adminLoginButton:hover{transform:translateY(-1px);background:#292922;box-shadow:0 14px 28px #17171425}
+.adminLoginButton:disabled{opacity:.65;cursor:wait;transform:none}
+.adminLoginButton span{font-size:15px;color:#dfff70}
+.adminLoginError{border:1px solid #efcaca;background:#fff1f1;color:#a33a3a;border-radius:9px;padding:11px 12px;font-size:11px;line-height:1.5;margin-bottom:16px}
+.adminLoginFoot{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-top:22px;padding-top:18px;border-top:1px solid #e6e1d8;font:9px 'DM Mono';color:#8b877e}
+.adminLoginFoot span{display:flex;align-items:center;gap:7px}
+.adminLoginFoot i{width:6px;height:6px;border-radius:50%;background:#54b87b;display:inline-block}
+.adminLoginFoot a{color:#5f5b54;text-decoration:none}
+.adminLoginFoot a:hover{color:#171714}
+.adminLoginCopyright{text-align:center;margin:17px 0 0;font:8px 'DM Mono';letter-spacing:1.4px;color:#aaa59b}
+@media(max-width:560px){.adminLoginPage{padding:20px 16px}.adminLoginCard{padding:30px 22px;border-radius:16px}.adminLoginCard h1{font-size:39px;letter-spacing:-2.4px}.adminLoginBadge{display:none}.adminLoginBrand{margin-bottom:16px}}
