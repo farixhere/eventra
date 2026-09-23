@@ -13,7 +13,7 @@ export default async function DashboardPage() {
     process.env.EVENTRA_ADMIN_PASSWORD
   );
 
-  if (!authenticated) redirect("/dashboard/login?next=/dashboard");
+  if (!authenticated) redirect("/admin-login?next=/dashboard");
 
   return <DashboardClient />;
 }
