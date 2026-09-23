@@ -42,3 +42,25 @@ export async function DELETE(request) {
     return Response.json({ error: "Unable to delete venue" }, { status: 500 });
   }
 }
+
+
+export async function PATCH(request) {
+  try {
+    const body = await request.json();
+    if (!body.id) return Response.json({ error: "id is required" }, { status: 400 });
+    const sql = getDb();
+    const rows = await sql`
+      UPDATE venues
+      SET name=COALESCE(NULLIF(TRIM(${body.name || ""}),''),name),
+          location=CASE WHEN ${body.location === undefined} THEN location ELSE NULLIF(TRIM(${body.location || ""}),'') END,
+          capacity=CASE WHEN ${body.capacity === undefined} THEN capacity ELSE NULLIF(${body.capacity || ""},'')::integer END
+      WHERE id=${body.id}
+      RETURNING id,name,location,capacity,created_at
+    `;
+    if (!rows[0]) return Response.json({ error: "Venue not found" }, { status: 404 });
+    return Response.json({ venue: rows[0] });
+  } catch (error) {
+    console.error("PATCH /api/venues failed", error);
+    return Response.json({ error: "Unable to update venue" }, { status: 500 });
+  }
+}
