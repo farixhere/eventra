@@ -8,7 +8,7 @@ export async function GET(request) {
 
     // Final results are the official position/prize record.
     const results = await sql`
-      SELECT r.id, r.programme_id, r.participant_id, r.team_id, r.position, r.total_score, r.points, r.published,
+      SELECT r.id, r.programme_id, r.participant_id, r.team_id, r.position, r.total_score, r.points, r.notes, r.published, r.published_at,
              r.created_at, p.name AS programme_name, p.type AS programme_type,
              COALESCE(part.name, team.name) AS entry_name, team.name AS team_name
       FROM results r
@@ -51,9 +51,9 @@ export async function POST(request) {
     const duplicate = await sql`SELECT id FROM results WHERE programme_id = ${body.programmeId} AND COALESCE(participant_id::text, '') = COALESCE(${participantId}::text, '') AND COALESCE(team_id::text, '') = COALESCE(${teamId}::text, '')`;
     if (duplicate[0]) return Response.json({ error: "A result already exists for this entry" }, { status: 409 });
     const rows = await sql`
-      INSERT INTO results (programme_id, participant_id, team_id, position, total_score, points, published)
-      VALUES (${body.programmeId}, ${participantId}, ${teamId}, ${position}, ${body.totalScore === "" || body.totalScore == null ? null : Number(body.totalScore)}, ${body.points === "" || body.points == null ? 0 : Number(body.points)}, ${Boolean(body.published)})
-      RETURNING id, programme_id, participant_id, team_id, position, total_score, points, published, created_at
+      INSERT INTO results (programme_id, participant_id, team_id, position, total_score, points, notes, published, published_at)
+      VALUES (${body.programmeId}, ${participantId}, ${teamId}, ${position}, ${body.totalScore === "" || body.totalScore == null ? null : Number(body.totalScore)}, ${body.points === "" || body.points == null ? 0 : Number(body.points)}, ${body.notes?.trim() || null}, ${Boolean(body.published)}, ${body.published ? "now()" : null})
+      RETURNING id, programme_id, participant_id, team_id, position, total_score, points, notes, published, published_at, created_at
     `;
     return Response.json({ result: rows[0] }, { status: 201 });
   } catch (error) {
@@ -69,7 +69,7 @@ export async function PATCH(request) {
     const sql = getDb();
     const rows = await sql`
       UPDATE results
-      SET published = ${Boolean(body.published)}
+      SET published = ${Boolean(body.published)}, published_at = CASE WHEN ${Boolean(body.published)} THEN COALESCE(published_at, now()) ELSE NULL END
       WHERE id = ${body.id}
       RETURNING id, programme_id, participant_id, team_id, position, total_score, points, published, created_at
     `;
