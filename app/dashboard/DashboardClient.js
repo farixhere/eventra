@@ -182,6 +182,26 @@ export default function Dashboard() {
     } catch (err) { setError(err.message); }
   }
 
+  async function editResource(kind, item) {
+    const fields = kind === "venues"
+      ? { name: window.prompt("Venue name", item.name) ?? item.name, location: window.prompt("Location", item.location || "") ?? (item.location || ""), capacity: window.prompt("Capacity", item.capacity || "") ?? (item.capacity || "") }
+      : kind === "teams"
+        ? { name: window.prompt("Team name", item.name) ?? item.name, code: window.prompt("Team code", item.code || "") ?? (item.code || "") }
+        : kind === "participants"
+          ? { name: window.prompt("Participant name", item.name) ?? item.name, email: window.prompt("Email", item.email || "") ?? (item.email || ""), phone: window.prompt("Phone", item.phone || "") ?? (item.phone || "") }
+          : kind === "programmes"
+            ? { name: window.prompt("Programme name", item.name) ?? item.name, category: window.prompt("Category", item.category || "") ?? (item.category || ""), maxParticipants: window.prompt("Maximum participants", item.max_participants || "") ?? (item.max_participants || "") }
+            : null;
+    if (!fields) return;
+    setSaving(true); setError("");
+    try {
+      const response = await fetch("/api/" + kind, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: item.id, ...fields }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to update " + kind);
+      await loadSectionData();
+    } catch (err) { setError(err.message); } finally { setSaving(false); }
+  }
+
   async function removeResource(kind, id) {
     if (!window.confirm("Delete this " + kind.slice(0, -1) + "?")) return;
     setError("");
@@ -250,9 +270,9 @@ export default function Dashboard() {
 
           {section !== "events" && !selectedEvent(events, selectedId) && <div className="eventEmpty"><strong>Create an event first.</strong><span>Resources belong to an event.</span></div>}
 
-          {section === "venues" && selectedEvent(events, selectedId) && <ResourcePanel title="Venues" count={venues.length} hint="Where programmes happen." loading={loadingSection}><form className="inlineForm" onSubmit={(e) => { e.preventDefault(); createResource("venues", venueForm, () => setVenueForm(emptyVenue)); }}><input value={venueForm.name} onChange={(e) => setVenueForm({...venueForm,name:e.target.value})} placeholder="Venue name" required /><input value={venueForm.location} onChange={(e) => setVenueForm({...venueForm,location:e.target.value})} placeholder="Building / location" /><input type="number" min="1" value={venueForm.capacity} onChange={(e) => setVenueForm({...venueForm,capacity:e.target.value})} placeholder="Capacity" /><button disabled={saving}>+ Add venue</button></form><ResourceList items={venues} kind="venues" empty="No venues added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.location || "Location not set"} {item.capacity ? "· " + item.capacity + " capacity" : ""}</span></>} /></ResourcePanel>}
+          {section === "venues" && selectedEvent(events, selectedId) && <ResourcePanel title="Venues" count={venues.length} hint="Where programmes happen." loading={loadingSection}><form className="inlineForm" onSubmit={(e) => { e.preventDefault(); createResource("venues", venueForm, () => setVenueForm(emptyVenue)); }}><input value={venueForm.name} onChange={(e) => setVenueForm({...venueForm,name:e.target.value})} placeholder="Venue name" required /><input value={venueForm.location} onChange={(e) => setVenueForm({...venueForm,location:e.target.value})} placeholder="Building / location" /><input type="number" min="1" value={venueForm.capacity} onChange={(e) => setVenueForm({...venueForm,capacity:e.target.value})} placeholder="Capacity" /><button disabled={saving}>+ Add venue</button></form><ResourceList items={venues} kind="venues" empty="No venues added yet." onDelete={removeResource} onEdit={editResource} render={(item) => <><strong>{item.name}</strong><span>{item.location || "Location not set"} {item.capacity ? "· " + item.capacity + " capacity" : ""}</span></>} /></ResourcePanel>}
 
-          {section === "teams" && selectedEvent(events, selectedId) && <ResourcePanel title="Teams" count={teams.length} hint="Groups participating in this event." loading={loadingSection}><form className="inlineForm" onSubmit={(e) => { e.preventDefault(); createResource("teams", teamForm, () => setTeamForm(emptyTeam)); }}><input value={teamForm.name} onChange={(e) => setTeamForm({...teamForm,name:e.target.value})} placeholder="Team name" required /><input value={teamForm.code} onChange={(e) => setTeamForm({...teamForm,code:e.target.value})} placeholder="Short code (optional)" /><button disabled={saving}>+ Add team</button></form><ResourceList items={teams} kind="teams" empty="No teams added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.code || "No code"}</span></>} /></ResourcePanel>}
+          {section === "teams" && selectedEvent(events, selectedId) && <ResourcePanel title="Teams" count={teams.length} hint="Groups participating in this event." loading={loadingSection}><form className="inlineForm" onSubmit={(e) => { e.preventDefault(); createResource("teams", teamForm, () => setTeamForm(emptyTeam)); }}><input value={teamForm.name} onChange={(e) => setTeamForm({...teamForm,name:e.target.value})} placeholder="Team name" required /><input value={teamForm.code} onChange={(e) => setTeamForm({...teamForm,code:e.target.value})} placeholder="Short code (optional)" /><button disabled={saving}>+ Add team</button></form><ResourceList items={teams} kind="teams" empty="No teams added yet." onDelete={removeResource} onEdit={editResource} render={(item) => <><strong>{item.name}</strong><span>{item.code || "No code"}</span></>} /></ResourcePanel>}
 
           {section === "programmes" && selectedEvent(events, selectedId) && <ResourcePanel title="Programmes" count={programmes.length} hint="Programmes and activities in this event." loading={loadingSection}>
             <form className="programmeForm" onSubmit={(e) => { e.preventDefault(); createResource("programmes", programmeForm, () => setProgrammeForm(emptyProgramme)); }}>
@@ -262,7 +282,7 @@ export default function Dashboard() {
               <input type="number" min="1" value={programmeForm.maxParticipants} onChange={(e) => setProgrammeForm({...programmeForm,maxParticipants:e.target.value})} placeholder="Max participants" />
               <button disabled={saving}>+ Add programme</button>
             </form>
-            <ResourceList items={programmes} kind="programmes" empty="No programmes added yet." onDelete={removeResource} render={(item) => <><strong>{item.name}</strong><span>{item.category || "General"} · {item.type} {item.max_participants ? "· max " + item.max_participants : ""}</span></>} />
+            <ResourceList items={programmes} kind="programmes" empty="No programmes added yet." onDelete={removeResource} onEdit={editResource} render={(item) => <><strong>{item.name}</strong><span>{item.category || "General"} · {item.type} {item.max_participants ? "· max " + item.max_participants : ""}</span></>} />
           </ResourcePanel>}
 
           {section === "registrations" && selectedEvent(events, selectedId) && <ResourcePanel title="Registrations" count={registrations.length} hint="Connect participants or teams to programmes." loading={loadingSection}>
@@ -387,7 +407,7 @@ export default function Dashboard() {
 
 function selectedEvent(events, id) { return events.find((event) => event.id === id) || null; }
 function ResourcePanel({ title, count, hint, loading, children }) { return <div className="resourcePanel"><div className="resourceHeader"><div><small>EVENT MANAGEMENT</small><h2>{title}</h2><p>{hint}</p></div><span className="resourceCount">{count}</span></div>{children}{loading && <div className="eventEmpty">Loading…</div>}</div>; }
-function ResourceList({ items, kind, empty, onDelete, onPublish, render }) {
+function ResourceList({ items, kind, empty, onDelete, onPublish, onEdit, render }) {
   if (!items.length) return <div className="eventEmpty">{empty}</div>;
-  return <div className="resourceList">{items.map((item) => <div className="resourceRow" key={item.id}><div>{render(item)}</div><div className="resourceActions">{typeof item.published === "boolean" && onPublish && <button onClick={() => onPublish(kind, item.id, item.published)}>{item.published ? "Unpublish" : "Publish"}</button>}<button onClick={() => onDelete(kind, item.id)}>Delete</button></div></div>)}</div>;
+  return <div className="resourceList">{items.map((item) => <div className="resourceRow" key={item.id}><div>{render(item)}</div><div className="resourceActions">{onEdit && <button onClick={() => onEdit(kind, item)}>Edit</button>}{typeof item.published === "boolean" && onPublish && <button onClick={() => onPublish(kind, item.id, item.published)}>{item.published ? "Unpublish" : "Publish"}</button>}<button onClick={() => onDelete(kind, item.id)}>Delete</button></div></div>)}</div>;
 }
