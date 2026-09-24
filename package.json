@@ -5,12 +5,17 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:browserstack": "npx browserstack-node-sdk playwright test"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
     "next": "16.1.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "browserstack-node-sdk": "latest"
   }
 }
