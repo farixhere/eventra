@@ -198,6 +198,15 @@ export default function Dashboard() {
     } catch (err) { setError(err.message); }
   }
 
+  async function printIdCard(card) {
+    const participant = participants.find((item) => item.id === card.participant_id);
+    const event = selectedEvent(events, selectedId);
+    const popup = window.open("", "_blank", "width=800,height=600");
+    if (!popup) return;
+    popup.document.write("<!doctype html><html><head><title>ID Card - " + (participant?.name || card.participant_name || "Participant") + "</title><style>body{font-family:Arial,sans-serif;background:#111;color:#fff;padding:40px}.card{width:620px;margin:auto;padding:36px;border-radius:28px;background:#f5f5f0;color:#111;box-shadow:0 20px 60px #0005}.brand{font-size:14px;letter-spacing:3px;text-transform:uppercase}.name{font-size:42px;font-weight:800;margin:50px 0 10px}.meta{font-size:18px;line-height:1.7}.number{margin-top:35px;padding-top:20px;border-top:1px solid #bbb;font-family:monospace}.print{margin:30px auto;display:block;padding:14px 22px;border:0;border-radius:999px;background:#d7ff3f;font-weight:800}@media print{body{background:#fff;padding:0}.print{display:none}}</style></head><body><div class="card"><div class="brand">" + (event?.name || "EVENTRA") + "</div><div class="name">" + (participant?.name || card.participant_name || "Participant") + "</div><div class="meta">Participant ID: " + (participant?.participant_code || card.participant_code || "—") + "</div><div class="number">CARD " + card.card_number + "</div></div><button class="print" onclick="window.print()">Print / Save as PDF</button></body></html>");
+    popup.document.close();
+  }
+
   async function editResource(kind, item) {
     const fields = kind === "venues"
       ? { name: window.prompt("Venue name", item.name) ?? item.name, location: window.prompt("Location", item.location || "") ?? (item.location || ""), capacity: window.prompt("Capacity", item.capacity || "") ?? (item.capacity || "") }
@@ -354,7 +363,7 @@ export default function Dashboard() {
               </select>
               <button disabled={saving || !participants.length}>{saving ? "Creating…" : "+ Create ID card"}</button>
             </form>
-            {!loadingSection && !idCards.length ? <div className="eventEmpty"><strong>No ID cards yet.</strong><span>Select a participant above to create the first organiser-issued ID card.</span></div> : <div className="resourceList">{idCards.map((card) => <div className="resourceRow" key={card.id}><div><strong>{card.participant_name}</strong><span>{card.card_number} · {card.participant_code}</span></div><div className="resourceActions"><button onClick={() => removeResource("id-cards", card.id)}>Delete</button></div></div>)}</div>}
+            {!loadingSection && !idCards.length ? <div className="eventEmpty"><strong>No ID cards yet.</strong><span>Select a participant above to create the first organiser-issued ID card.</span></div> : <div className="resourceList">{idCards.map((card) => <div className="resourceRow" key={card.id}><div><strong>{card.participant_name}</strong><span>{card.card_number} · {card.participant_code}</span></div><div className="resourceActions"><button onClick={() => printIdCard(card)}>Print</button><button onClick={() => removeResource("id-cards", card.id)}>Delete</button></div></div>)}</div>}
           </ResourcePanel>}
 
           {section === "results" && selectedEvent(events, selectedId) && <div className="resultPanel">
