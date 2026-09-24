@@ -1,0 +1,54 @@
+name: Eventra BrowserStack Smoke Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  browserstack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Eventra
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create BrowserStack configuration
+        shell: bash
+        env:
+          BS_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BS_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+        run: |
+          cat > browserstack.yml <<EOF
+          userName: "$BS_USERNAME"
+          accessKey: "$BS_ACCESS_KEY"
+          framework: playwright
+          projectName: Eventra
+          buildName: Eventra-Production-Smoke
+          platforms:
+            - os: Windows
+              osVersion: "11"
+              browserName: Chrome
+              browserVersion: latest
+          browserstackLocal: false
+          debug: true
+          networkLogs: true
+          consoleLogs: info
+          video: true
+          playwrightConfigOptions:
+            use:
+              baseURL: "https://eventra-ruddy.vercel.app"
+          EOF
+
+      - name: Run Eventra smoke tests on BrowserStack
+        env:
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+          EVENTRA_ADMIN_PASSWORD: ${{ secrets.EVENTRA_ADMIN_PASSWORD }}
+          EVENTRA_BASE_URL: https://eventra-ruddy.vercel.app
+        run: npm run test:browserstack -- tests/eventra.spec.js
