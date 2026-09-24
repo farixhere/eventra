@@ -136,6 +136,22 @@ export default function Dashboard() {
   useEffect(() => { loadEvents(); }, []);
   useEffect(() => { loadSectionData(); }, [section, selectedId]);
 
+  async function editEvent(item) {
+    const name = window.prompt("Event name", item.name);
+    if (name === null) return;
+    const location = window.prompt("Location", item.location || "");
+    if (location === null) return;
+    const tagline = window.prompt("Tagline", item.tagline || "");
+    if (tagline === null) return;
+    setSaving(true); setError("");
+    try {
+      const response = await fetch("/api/events", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: item.id, name, location, tagline }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to update event");
+      await loadEvents();
+    } catch (err) { setError(err.message); } finally { setSaving(false); }
+  }
+
   async function createEvent(event) {
     event.preventDefault(); setSaving(true); setError("");
     try {
@@ -266,7 +282,7 @@ export default function Dashboard() {
 </div>}
           {events.length > 0 && <div className="eventSelector"><label>MANAGING EVENT<select value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>{events.map((event) => <option key={event.id} value={event.id}>{event.name}</option>)}</select></label></div>}
 
-          {section === "events" && <div className="eventPanel"><div className="panelTop"><div><small>YOUR FESTIVALS</small><h2>Recent events</h2></div><button onClick={loadEvents}>Refresh →</button></div>{loading ? <div className="eventEmpty">Loading your events…</div> : events.length === 0 ? <div className="eventEmpty"><strong>No events yet.</strong><span>Create your first event to start building Eventra.</span><button onClick={() => setEventModalOpen(true)}>+ Create your first event</button></div> : events.map((event) => <div className={"eventRow eventRowButton " + (event.id === selectedId ? "eventRowActive" : "")} key={event.id} onClick={() => setSelectedId(event.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedId(event.id); }}><div><strong>{event.name}</strong><span>{formatDate(event.start_date)} · {event.location || "Location not set"}</span></div><span className={"pill " + (event.status === "live" ? "live" : "")}>{event.status}</span><a className="eventPublicLink" href={"/event/" + event.slug} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>View site ↗</a><button type="button" className="eventDelete" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); removeEvent(event.id, event.name); }}>Delete</button><span className="rowArrow">→</span></div>)}</div>}
+          {section === "events" && <div className="eventPanel"><div className="panelTop"><div><small>YOUR FESTIVALS</small><h2>Recent events</h2></div><button onClick={loadEvents}>Refresh →</button></div>{loading ? <div className="eventEmpty">Loading your events…</div> : events.length === 0 ? <div className="eventEmpty"><strong>No events yet.</strong><span>Create your first event to start building Eventra.</span><button onClick={() => setEventModalOpen(true)}>+ Create your first event</button></div> : events.map((event) => <div className={"eventRow eventRowButton " + (event.id === selectedId ? "eventRowActive" : "")} key={event.id} onClick={() => setSelectedId(event.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedId(event.id); }}><div><strong>{event.name}</strong><span>{formatDate(event.start_date)} · {event.location || "Location not set"}</span></div><span className={"pill " + (event.status === "live" ? "live" : "")}>{event.status}</span><a className="eventPublicLink" href={"/event/" + event.slug} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>View site ↗</a><button type="button" className="eventEdit" onClick={(e) => { e.stopPropagation(); editEvent(event); }}>Edit</button><button type="button" className="eventDelete" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); removeEvent(event.id, event.name); }}>Delete</button><span className="rowArrow">→</span></div>)}</div>}
 
           {section !== "events" && !selectedEvent(events, selectedId) && <div className="eventEmpty"><strong>Create an event first.</strong><span>Resources belong to an event.</span></div>}
 
