@@ -3,7 +3,9 @@ import Link from "next/link";
 const features = [
   { n: "01", title: "Build your event", text: "Create festivals, campus events and programmes with a clean organizer workspace." },
   { n: "02", title: "Manage programmes", text: "Keep programmes, participants, teams and venues organized in one system." },
-  { n: "03", title: "Publish instantly", text: "Give every event a polished public page for schedules, results and announcements." }
+  { n: "03", title: "Publish instantly", text: "Give every event a polished public page for schedules, results, announcements, gallery and downloads." },
+  { n: "04", title: "Issue documents", text: "Prepare participant ID cards and certificate records from the same event data." },
+  { n: "05", title: "Stay in control", text: "Keep drafts private, publish only approved information, and manage the event from one workspace." }
 ];
 
 export default function Home() {
@@ -55,7 +57,7 @@ export default function Home() {
       <section className="how" id="how">
         <span>ONE WORKFLOW</span>
         <h2>From setup to <em>published results.</em></h2>
-        <div className="steps"><div><b>01</b><strong>Create</strong><p>Set up your event and choose what you need.</p></div><div><b>02</b><strong>Operate</strong><p>Run programmes, participants, schedules and judging.</p></div><div><b>03</b><strong>Publish</strong><p>Share a beautiful public event experience.</p></div></div>
+        <div className="steps"><div><b>01</b><strong>Create</strong><p>Set up your event and choose what you need.</p></div><div><b>02</b><strong>Operate</strong><p>Run programmes, participants, schedules and verified manual results.</p></div><div><b>03</b><strong>Publish</strong><p>Share a beautiful public event experience.</p></div></div>
       </section>
 
       <footer><span className="brand">eventra<span>.</span></span><span>Operate programmes, participants, schedules and event results.</span></footer>
