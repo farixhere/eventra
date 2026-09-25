@@ -486,6 +486,10 @@ export default function Dashboard() {
 
 function selectedEvent(events, id) { return events.find((event) => event.id === id) || null; }
 function ResourcePanel({ title, count, hint, loading, children }) { return <div className="resourcePanel"><div className="resourceHeader"><div><small>EVENT MANAGEMENT</small><h2>{title}</h2><p>{hint}</p></div><span className="resourceCount">{count}</span></div>{children}{loading && <div className="eventEmpty">Loading…</div>}</div>; }
+function ScheduleTimelineRow({item,onEdit,onDelete}) {
+  return <div className="timelineRow"><time>{new Date(item.starts_at).toLocaleString("en-IN",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})} — {new Date(item.ends_at).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"})}</time><div><strong>{item.programme_name}</strong><span>{item.venue_name||"Venue TBA"} · {item.status}</span></div><div><button type="button" onClick={()=>onEdit(item)}>Edit</button><button type="button" onClick={()=>onDelete(item.id)}>Delete</button></div></div>
+}
+
 function ResourceList({ items, kind, empty, onDelete, onPublish, onEdit, render }) {
   if (!items.length) return <div className="eventEmpty">{empty}</div>;
   return <div className="resourceList">{items.map((item) => <div className="resourceRow" key={item.id}><div>{render(item)}</div><div className="resourceActions">{onEdit && <button onClick={() => onEdit(kind, item)}>Edit</button>}{typeof item.published === "boolean" && onPublish && <button onClick={() => onPublish(kind, item.id, item.published)}>{item.published ? "Unpublish" : "Publish"}</button>}<button onClick={() => onDelete(kind, item.id)}>Delete</button></div></div>)}</div>;
