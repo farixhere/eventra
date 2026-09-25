@@ -10,6 +10,7 @@ const eventFields = "id,name,slug,description,start_date,end_date,location,statu
 export async function GET() {
   try {
     const sql = getDb();
+    await sql`ALTER TABLE events ADD COLUMN IF NOT EXISTS website_sections jsonb NOT NULL DEFAULT '{}'::jsonb`;
     const events = await sql`SELECT id,name,slug,description,start_date,end_date,location,status,tagline,logo_url,banner_url,website_theme,primary_color,secondary_color,is_public,registration_open,registration_deadline,COALESCE(website_sections,'{}'::jsonb) AS website_sections,created_at FROM events ORDER BY created_at DESC`;
     return Response.json({ events });
   } catch (error) {
