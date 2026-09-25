@@ -42,6 +42,7 @@ export default function Dashboard() {
   const [mediaForm, setMediaForm] = useState(emptyMedia);
   const [scheduleForm, setScheduleForm] = useState(emptySchedule);
   const [editingSchedule, setEditingSchedule] = useState(null);
+  const [scheduleView, setScheduleView] = useState("timetable");
   const [resultForm, setResultForm] = useState(emptyResult);
   const [eventForm, setEventForm] = useState(emptyEvent);
   const [venueForm, setVenueForm] = useState(emptyVenue);
@@ -156,6 +157,10 @@ export default function Dashboard() {
       const response = await fetch("/api/schedules", { method:editingSchedule ? "PATCH" : "POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to save schedule");
+      if (editingSchedule) {
+        const programmeName = programmes.find((p) => p.id === scheduleForm.programmeId)?.name || "Programme";
+        await fetch("/api/announcements", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ eventId:selectedId, title:"Schedule updated · "+programmeName, body:"The official schedule for "+programmeName+" was changed. Please check the latest timetable on the Eventra website." }) });
+      }
       setScheduleForm(emptySchedule); setEditingSchedule(null); await loadSectionData();
     } catch (err) { setError(err.message); } finally { setSaving(false); }
   }
@@ -382,7 +387,8 @@ export default function Dashboard() {
               <div className="scheduleField"><label>Ends</label><input type="datetime-local" value={scheduleForm.endsAt} onChange={(e) => setScheduleForm({...scheduleForm,endsAt:e.target.value})} required /></div>
               <button disabled={saving}>{saving ? "Saving…" : editingSchedule ? "Save reschedule" : "+ Add to schedule"}</button>
             <button type="button" className="scheduleCancel" onClick={()=>{setEditingSchedule(null);setScheduleForm(emptySchedule)}}>{editingSchedule ? "Cancel edit" : ""}</button></form>
-            {loadingSection ? <div className="eventEmpty">Loading schedule…</div> : !schedules.length ? <div className="eventEmpty"><strong>No schedule entries yet.</strong><span>Add your first programme to start building the event timetable.</span></div> : <div className="scheduleList">
+            <div className="scheduleViews"><button className={scheduleView==="timetable"?"active":""} onClick={()=>setScheduleView("timetable")} type="button">Timetable</button><button className={scheduleView==="venues"?"active":""} onClick={()=>setScheduleView("venues")} type="button">Venue timeline</button><button className={scheduleView==="programmes"?"active":""} onClick={()=>setScheduleView("programmes")} type="button">Programme timeline</button></div>
+            {loadingSection ? <div className="eventEmpty">Loading schedule…</div> : !schedules.length ? <div className="eventEmpty"><strong>No schedule entries yet.</strong><span>Add your first programme to start building the event timetable.</span></div> : scheduleView === "venues" ? <div className="scheduleTimeline">{venues.map(venue=><div className="timelineGroup" key={venue.id}><div className="timelineGroupHead"><strong>{venue.name}</strong><span>{venue.location||"Venue"}</span></div>{schedules.filter(s=>s.venue_id===venue.id).map(item=><ScheduleTimelineRow key={item.id} item={item} onEdit={editSchedule} onDelete={id=>removeResource("schedules",id)}/>) }{!schedules.some(s=>s.venue_id===venue.id)&&<span className="timelineEmpty">No scheduled programmes.</span>}</div>)}</div> : scheduleView === "programmes" ? <div className="scheduleTimeline">{programmes.map(programme=><div className="timelineGroup" key={programme.id}><div className="timelineGroupHead"><strong>{programme.name}</strong><span>{programme.category||"Programme"}</span></div>{schedules.filter(s=>s.programme_id===programme.id).map(item=><ScheduleTimelineRow key={item.id} item={item} onEdit={editSchedule} onDelete={id=>removeResource("schedules",id)}/>) }{!schedules.some(s=>s.programme_id===programme.id)&&<span className="timelineEmpty">Not scheduled.</span>}</div>)}</div> : <div className="scheduleList">
               {schedules.map((item) => <div className="scheduleRow" key={item.id}>
                 <div className="scheduleTime"><strong>{new Date(item.starts_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong><span>{new Date(item.ends_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span></div>
                 <div className="scheduleInfo"><strong>{item.programme_name}</strong><span>{item.venue_name || "Venue not assigned"}{item.programme_category ? " · " + item.programme_category : ""}</span></div>
