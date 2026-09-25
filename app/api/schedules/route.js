@@ -43,7 +43,7 @@ export async function POST(request) {
           AND ends_at > ${startsAt}
         LIMIT 1
       `;
-      if (conflicts.length) return NextResponse.json({ error: "This venue is already scheduled during that time" }, { status: 409 });
+      if (conflicts.length) return NextResponse.json({ error: "Venue clash: another programme is already using this venue during that time." }, { status: 409 });
     }
 
     const programmeConflicts = await db`
@@ -53,7 +53,19 @@ export async function POST(request) {
         AND ends_at > ${startsAt}
       LIMIT 1
     `;
-    if (programmeConflicts.length) return NextResponse.json({ error: "This programme already has an overlapping schedule" }, { status: 409 });
+    if (programmeConflicts.length) return NextResponse.json({ error: "Programme clash: this programme already has an overlapping schedule." }, { status: 409 });
+
+    const participantConflicts = await db`
+      SELECT DISTINCT s.id, p.name AS participant_name, other.name AS conflicting_programme
+      FROM schedules s
+      JOIN registrations existing ON existing.programme_id = s.programme_id AND existing.status = 'registered'
+      JOIN registrations incoming ON incoming.participant_id = existing.participant_id AND incoming.programme_id = ${programmeId} AND incoming.status = 'registered'
+      JOIN participants p ON p.id = existing.participant_id
+      JOIN programmes other ON other.id = s.programme_id
+      WHERE s.starts_at < ${endsAt} AND s.ends_at > ${startsAt}
+      LIMIT 10
+    `;
+    if (participantConflicts.length) return NextResponse.json({ error: "Participant clash: one or more participants are already scheduled during this time.", conflicts: participantConflicts }, { status: 409 });
 
     const rows = await db`
       INSERT INTO schedules (programme_id, venue_id, starts_at, ends_at, status)
