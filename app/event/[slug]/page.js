@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 export default async function EventPage({ params }) {
   const { slug } = await params;
   const sql = getDb();
+  await sql`ALTER TABLE events ADD COLUMN IF NOT EXISTS website_sections jsonb NOT NULL DEFAULT '{}'::jsonb`;
   const events = await sql`SELECT id,name,slug,description,tagline,start_date,end_date,location,status,logo_url,banner_url,primary_color,secondary_color,is_public,registration_open,registration_deadline,COALESCE(website_sections,'{}'::jsonb) AS website_sections FROM events WHERE slug=${slug} LIMIT 1`;
   if (!events.length) notFound();
   const event = events[0];
