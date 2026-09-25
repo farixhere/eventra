@@ -6,7 +6,7 @@ export async function GET(request) {
     if (!eventId) return Response.json({ error: "eventId is required" }, { status: 400 });
     const sql = getDb();
     const participants = await sql`
-      SELECT p.id, p.name, p.email, p.phone, p.participant_code, p.team_id, t.name AS team_name, p.created_at
+      SELECT p.id, p.name, p.email, p.phone, p.participant_code, p.team_id, p.school_college, p.class_year, p.profile_picture_url, p.status, p.address, p.custom_fields, t.name AS team_name, p.created_at
       FROM participants p
       LEFT JOIN teams t ON t.id = p.team_id
       WHERE p.event_id = ${eventId}
