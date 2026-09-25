@@ -25,7 +25,7 @@ export default function Home() {
         <h1>Run the event.<br /><em>Not the chaos.</em></h1>
         <p className="heroText">Eventra gives organizers one calm command center for festivals, participants, schedules, programmes, documents and published results.</p>
         <div className="heroActions">
-          <Link className="primary" href="/dashboard">Start organizing <span>→</span></Link>
+          <Link className="primary" href="/dashboard">Start organizing <span aria-hidden="true">→</span></Link>
           <a className="secondary" href="#features">Explore Eventra</a>
         </div>
         <div className="heroMeta">
