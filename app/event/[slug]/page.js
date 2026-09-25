@@ -10,18 +10,6 @@ export default async function EventPage({ params }) {
   const { slug } = await params;
   const sql = getDb();
 
-  await sql`ALTER TABLE events
-    ADD COLUMN IF NOT EXISTS tagline text,
-    ADD COLUMN IF NOT EXISTS logo_url text,
-    ADD COLUMN IF NOT EXISTS banner_url text,
-    ADD COLUMN IF NOT EXISTS website_theme text NOT NULL DEFAULT 'eventra',
-    ADD COLUMN IF NOT EXISTS primary_color text NOT NULL DEFAULT '#d7ff3f',
-    ADD COLUMN IF NOT EXISTS secondary_color text NOT NULL DEFAULT '#111111',
-    ADD COLUMN IF NOT EXISTS is_public boolean NOT NULL DEFAULT false,
-    ADD COLUMN IF NOT EXISTS registration_open boolean NOT NULL DEFAULT false,
-    ADD COLUMN IF NOT EXISTS registration_deadline timestamptz`;
-  await sql`ALTER TABLE events ADD COLUMN IF NOT EXISTS website_sections jsonb NOT NULL DEFAULT '{}'::jsonb`;
-
   const ev = await sql`SELECT id,name,slug,description,tagline,start_date,end_date,location,status,
     logo_url,banner_url,primary_color,secondary_color,is_public,registration_open,registration_deadline,
     COALESCE(website_sections,'{}'::jsonb) AS website_sections
