@@ -1,0 +1,2 @@
+import {getDb} from "../../../lib/db"; import {teamLeaderboard} from "../../../lib/eventra-ops";
+export async function GET(request){try{const eventId=new URL(request.url).searchParams.get("eventId");if(!eventId)return Response.json({error:"eventId is required"},{status:400});return Response.json({leaderboard:await teamLeaderboard(getDb(),eventId),generatedAt:new Date().toISOString()});}catch(e){console.error(e);return Response.json({error:"Unable to load leaderboard"},{status:500});}}
