@@ -51,7 +51,7 @@ export default function Home() {
 
       <section className="features" id="features">
         <div className="sectionIntro"><span>THE CORE</span><h2>Everything your event<br /><em>actually needs.</em></h2></div>
-        <div className="featureGrid">{features.map(f => <article key={f.n}><small>{f.n}</small><h3>{f.title}</h3><p>{f.text}</p><span className="arrow">↗</span></article>)}</div>
+        <div className="featureGrid">{features.map(f => <article key={f.n}><small>{f.n}</small><h3>{f.title}</h3><p>{f.text}</p><span className="arrow" aria-hidden="true">↗</span></article>)}</div>
       </section>
 
       <section className="how" id="how">
