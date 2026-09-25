@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [downloadForm, setDownloadForm] = useState(emptyDownload);
   const [mediaForm, setMediaForm] = useState(emptyMedia);
   const [scheduleForm, setScheduleForm] = useState(emptySchedule);
+  const [editingSchedule, setEditingSchedule] = useState(null);
   const [resultForm, setResultForm] = useState(emptyResult);
   const [eventForm, setEventForm] = useState(emptyEvent);
   const [venueForm, setVenueForm] = useState(emptyVenue);
@@ -136,21 +137,26 @@ export default function Dashboard() {
   useEffect(() => { loadEvents(); }, []);
   useEffect(() => { loadSectionData(); }, [section, selectedId]);
 
-  async function editSchedule(item) {
-    const programmeId = window.prompt("Programme ID", item.programme_id);
-    if (programmeId === null) return;
-    const startsAt = window.prompt("Start time (ISO or YYYY-MM-DDTHH:mm)", item.starts_at ? new Date(item.starts_at).toISOString().slice(0,16) : "");
-    if (startsAt === null) return;
-    const endsAt = window.prompt("End time (ISO or YYYY-MM-DDTHH:mm)", item.ends_at ? new Date(item.ends_at).toISOString().slice(0,16) : "");
-    if (endsAt === null) return;
-    const venueId = window.prompt("Venue ID (leave blank for none)", item.venue_id || "");
-    if (venueId === null) return;
+  function editSchedule(item) {
+    setEditingSchedule(item);
+    setScheduleForm({
+      programmeId:item.programme_id || "",
+      venueId:item.venue_id || "",
+      startsAt:item.starts_at ? new Date(item.starts_at).toISOString().slice(0,16) : "",
+      endsAt:item.ends_at ? new Date(item.ends_at).toISOString().slice(0,16) : ""
+    });
+  }
+
+  async function saveSchedule(event) {
+    event.preventDefault();
+    const payload = { ...scheduleForm, eventId:selectedId };
+    if (editingSchedule) payload.id = editingSchedule.id;
     setSaving(true); setError("");
     try {
-      const response = await fetch("/api/schedules", { method:"PATCH", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ id:item.id, eventId:selectedId, programmeId, venueId:venueId || null, startsAt, endsAt, status:item.status || "scheduled" }) });
+      const response = await fetch("/api/schedules", { method:editingSchedule ? "PATCH" : "POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Unable to update schedule");
-      await loadSectionData();
+      if (!response.ok) throw new Error(data.error || "Unable to save schedule");
+      setScheduleForm(emptySchedule); setEditingSchedule(null); await loadSectionData();
     } catch (err) { setError(err.message); } finally { setSaving(false); }
   }
 
@@ -369,13 +375,13 @@ export default function Dashboard() {
           {section === "schedules" && selectedEvent(events, selectedId) && <div className="schedulePanel">
             <div className="scheduleHeader"><div><small>EVENT OPERATIONS</small><h2>Schedule command center</h2><p>Build, inspect, edit and publish the official running order.</p></div><div className="scheduleHeaderMeta"><strong>{schedules.length.toString().padStart(2,"0")}</strong><span>entries</span></div></div>
             <div className="scheduleToolbar"><button type="button" onClick={printSchedule}>Print schedule</button><button type="button" onClick={()=>loadSectionData()}>Refresh</button></div>
-            <form className="scheduleForm" onSubmit={(e) => { e.preventDefault(); createResource("schedules", scheduleForm, () => setScheduleForm(emptySchedule)); }}>
+            <form className="scheduleForm" onSubmit={saveSchedule}>
               <div className="scheduleField"><label>Programme</label><select value={scheduleForm.programmeId} onChange={(e) => setScheduleForm({...scheduleForm,programmeId:e.target.value})} required><option value="">Choose programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
               <div className="scheduleField"><label>Venue</label><select value={scheduleForm.venueId} onChange={(e) => setScheduleForm({...scheduleForm,venueId:e.target.value})}><option value="">No venue</option>{venues.map((v)=><option key={v.id} value={v.id}>{v.name}</option>)}</select></div>
               <div className="scheduleField"><label>Starts</label><input type="datetime-local" value={scheduleForm.startsAt} onChange={(e) => setScheduleForm({...scheduleForm,startsAt:e.target.value})} required /></div>
               <div className="scheduleField"><label>Ends</label><input type="datetime-local" value={scheduleForm.endsAt} onChange={(e) => setScheduleForm({...scheduleForm,endsAt:e.target.value})} required /></div>
-              <button disabled={saving}>{saving ? "Adding…" : "+ Add to schedule"}</button>
-            </form>
+              <button disabled={saving}>{saving ? "Saving…" : editingSchedule ? "Save reschedule" : "+ Add to schedule"}</button>
+            <button type="button" className="scheduleCancel" onClick={()=>{setEditingSchedule(null);setScheduleForm(emptySchedule)}}>{editingSchedule ? "Cancel edit" : ""}</button></form>
             {loadingSection ? <div className="eventEmpty">Loading schedule…</div> : !schedules.length ? <div className="eventEmpty"><strong>No schedule entries yet.</strong><span>Add your first programme to start building the event timetable.</span></div> : <div className="scheduleList">
               {schedules.map((item) => <div className="scheduleRow" key={item.id}>
                 <div className="scheduleTime"><strong>{new Date(item.starts_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong><span>{new Date(item.ends_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span></div>
