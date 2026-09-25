@@ -179,3 +179,6 @@
 
 /* Accessibility contrast hardening */
 .eyebrow,.sectionIntro>span,.how>span,.workspace small,.sideNav small{color:#5f5d56}.heroMeta,.heroMeta span{color:#5f5d56}.dashHeading small{color:#5f5d56}.cards span,.stat span{color:#5f5d56}.tableHead{color:#66635b}.pill{color:#5f5d56}.pill.live{color:#4f6200}.features .featureGrid small{color:#c0beb7}.features .featureGrid p{color:#c0beb7}.steps b{color:#66635b}.steps p{color:#5f5d56}.resourceHeader small,.modalHeader small,.eventEmpty,.resourceRow span{color:#5f5d56}.sideBottom a:focus,.sideNav button:focus,.navLinks a:focus,.primary:focus,.secondary:focus{outline:3px solid #6f8500;outline-offset:2px}
+
+/* Final contrast fixes for the public homepage */
+footer span:last-child{color:#5f5d56}.browserTop b{color:#5f5d56}.dashPreview aside small{color:#a4a199}.cards small{color:#5f5d56}.features .sectionIntro>span{color:#c0beb7}.featureGrid .arrow{color:#d7ff3f}
