@@ -1,0 +1,2 @@
+import {getDb} from "../../../../lib/db"; import {checkScheduleConflicts} from "../../../../lib/eventra-ops";
+export async function POST(request){try{const b=await request.json();if(!b.eventId||!b.programmeId||!b.startsAt||!b.endsAt)return Response.json({error:"eventId, programmeId, startsAt and endsAt are required"},{status:400});return Response.json(await checkScheduleConflicts(getDb(),b));}catch(e){console.error(e);return Response.json({error:"Unable to check conflicts"},{status:500});}}
