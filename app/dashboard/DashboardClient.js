@@ -136,6 +136,33 @@ export default function Dashboard() {
   useEffect(() => { loadEvents(); }, []);
   useEffect(() => { loadSectionData(); }, [section, selectedId]);
 
+  async function editSchedule(item) {
+    const programmeId = window.prompt("Programme ID", item.programme_id);
+    if (programmeId === null) return;
+    const startsAt = window.prompt("Start time (ISO or YYYY-MM-DDTHH:mm)", item.starts_at ? new Date(item.starts_at).toISOString().slice(0,16) : "");
+    if (startsAt === null) return;
+    const endsAt = window.prompt("End time (ISO or YYYY-MM-DDTHH:mm)", item.ends_at ? new Date(item.ends_at).toISOString().slice(0,16) : "");
+    if (endsAt === null) return;
+    const venueId = window.prompt("Venue ID (leave blank for none)", item.venue_id || "");
+    if (venueId === null) return;
+    setSaving(true); setError("");
+    try {
+      const response = await fetch("/api/schedules", { method:"PATCH", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ id:item.id, eventId:selectedId, programmeId, venueId:venueId || null, startsAt, endsAt, status:item.status || "scheduled" }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to update schedule");
+      await loadSectionData();
+    } catch (err) { setError(err.message); } finally { setSaving(false); }
+  }
+
+  function printSchedule() {
+    const event = selectedEvent(events, selectedId);
+    const rows = schedules.map((item) => "<tr><td>"+new Date(item.starts_at).toLocaleString()+"</td><td>"+item.programme_name+"</td><td>"+(item.venue_name||"—")+"</td><td>"+new Date(item.ends_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})+"</td></tr>").join("");
+    const popup = window.open("", "_blank", "width=1000,height=800");
+    if (!popup) { setError("Popup blocked. Allow popups to print the schedule."); return; }
+    popup.document.write("<!doctype html><html><head><title>"+(event?.name||"Eventra")+" Schedule</title><style>body{font:14px Arial;padding:40px}h1{font-size:32px}table{width:100%;border-collapse:collapse;margin-top:25px}th,td{text-align:left;padding:12px;border-bottom:1px solid #ddd}th{font-size:11px;text-transform:uppercase}</style></head><body><h1>"+(event?.name||"Eventra")+"</h1><p>Official event schedule</p><table><thead><tr><th>Start</th><th>Programme</th><th>Venue</th><th>End</th></tr></thead><tbody>"+rows+"</tbody></table><script>window.print()<\\/script></body></html>");
+    popup.document.close();
+  }
+
   async function editEvent(item) {
     const name = window.prompt("Event name", item.name);
     if (name === null) return;
@@ -340,7 +367,8 @@ export default function Dashboard() {
           </ResourcePanel>}
 
           {section === "schedules" && selectedEvent(events, selectedId) && <div className="schedulePanel">
-            <div className="scheduleHeader"><div><small>EVENT MANAGEMENT</small><h2>Schedule</h2><p>Build the running order for your event.</p></div><div className="scheduleHeaderMeta"><strong>{scheduleCount.toString().padStart(2,"0")}</strong><span>scheduled</span></div></div>
+            <div className="scheduleHeader"><div><small>EVENT OPERATIONS</small><h2>Schedule command center</h2><p>Build, inspect, edit and publish the official running order.</p></div><div className="scheduleHeaderMeta"><strong>{schedules.length.toString().padStart(2,"0")}</strong><span>entries</span></div></div>
+            <div className="scheduleToolbar"><button type="button" onClick={printSchedule}>Print schedule</button><button type="button" onClick={()=>loadSectionData()}>Refresh</button></div>
             <form className="scheduleForm" onSubmit={(e) => { e.preventDefault(); createResource("schedules", scheduleForm, () => setScheduleForm(emptySchedule)); }}>
               <div className="scheduleField"><label>Programme</label><select value={scheduleForm.programmeId} onChange={(e) => setScheduleForm({...scheduleForm,programmeId:e.target.value})} required><option value="">Choose programme</option>{programmes.map((p)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
               <div className="scheduleField"><label>Venue</label><select value={scheduleForm.venueId} onChange={(e) => setScheduleForm({...scheduleForm,venueId:e.target.value})}><option value="">No venue</option>{venues.map((v)=><option key={v.id} value={v.id}>{v.name}</option>)}</select></div>
@@ -352,7 +380,7 @@ export default function Dashboard() {
               {schedules.map((item) => <div className="scheduleRow" key={item.id}>
                 <div className="scheduleTime"><strong>{new Date(item.starts_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong><span>{new Date(item.ends_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span></div>
                 <div className="scheduleInfo"><strong>{item.programme_name}</strong><span>{item.venue_name || "Venue not assigned"}{item.programme_category ? " · " + item.programme_category : ""}</span></div>
-                <button className="scheduleDelete" onClick={() => removeResource("schedules", item.id)}>Delete</button>
+                <div className="scheduleActions"><button type="button" onClick={()=>editSchedule(item)}>Edit / reschedule</button><button type="button" className="scheduleDelete" onClick={() => removeResource("schedules", item.id)}>Delete</button></div>
               </div>)}
             </div>}
           </div>}
