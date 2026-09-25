@@ -37,6 +37,8 @@ export default function Dashboard() {
   const [downloads, setDownloads] = useState([]);
   const [media, setMedia] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsError, setAnalyticsError] = useState("");
   const [announcementForm, setAnnouncementForm] = useState(emptyAnnouncement);
   const [downloadForm, setDownloadForm] = useState(emptyDownload);
   const [mediaForm, setMediaForm] = useState(emptyMedia);
@@ -73,6 +75,16 @@ export default function Dashboard() {
 
   async function loadSectionData(eventId = selectedId) {
     if (!eventId || section === "events") return;
+    if (section === "analytics") {
+      try {
+        setLoadingSection(true); setAnalyticsError("");
+        const response = await fetch("/api/analytics?eventId="+eventId,{cache:"no-store"});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error||"Unable to load analytics");
+        setAnalytics(data);
+      } catch(err) { setAnalyticsError(err.message); } finally { setLoadingSection(false); }
+      return;
+    }
     try {
       setLoadingSection(true);
       const response = await fetch("/api/" + section + "?eventId=" + eventId, { cache: "no-store" });
@@ -297,7 +309,7 @@ export default function Dashboard() {
   const scheduleCount = schedules.length;
   const certificateCount = certificates.length;
   const idCardCount = idCards.length;
-  const nav = [["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["results","Results"],["certificates","Certificates"],["id-cards","ID Cards"],["announcements","Announcements"],["downloads","Downloads"],["media","Gallery"],["contact","Contact"]];
+  const nav = [["analytics","Analytics"],["events","Events"],["venues","Venues"],["teams","Teams"],["participants","Participants"],["programmes","Programmes"],["registrations","Registrations"],["schedules","Schedules"],["results","Results"],["certificates","Certificates"],["id-cards","ID Cards"],["announcements","Announcements"],["downloads","Downloads"],["media","Gallery"],["contact","Contact"]];
 
   return (
     <main className="dashboardPage">
@@ -305,8 +317,8 @@ export default function Dashboard() {
         <aside className="sideNav">
   <div className="sideBrand"><Link href="/" className="sideBrandLogo">eventra<span>.</span></Link></div>
   <div className="sideBrand"><span className="sideBrandMark">e</span><div><strong>Eventra</strong><small>EVENT CONTROL</small></div></div>
-  <small>EVENT SETUP</small>
-  {nav.slice(0,5).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span>{key === "events" ? <b>⌂</b> : key === "venues" ? <b>⌁</b> : key === "teams" ? <b>◌</b> : key === "participants" ? <b>◎</b> : <b>▦</b>}</button>)}
+  <small>OVERVIEW</small><button key="analytics" className={section === "analytics" ? "selected" : ""} onClick={() => setSection("analytics")}><span>Analytics</span><b>◫</b></button><small>EVENT SETUP</small>
+  {nav.slice(1,6).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span>{key === "events" ? <b>⌂</b> : key === "venues" ? <b>⌁</b> : key === "teams" ? <b>◌</b> : key === "participants" ? <b>◎</b> : <b>▦</b>}</button>)}
   <small className="space">OPERATIONS</small>
   {nav.slice(5,7).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "registrations" ? "↳" : key === "schedules" ? "◷" : "✦"}</b></button>)}
   <small className="space">RESULTS & DOCUMENTS</small>
@@ -343,6 +355,7 @@ export default function Dashboard() {
 </div>}
           {events.length > 0 && <div className="eventSelector"><label>MANAGING EVENT<select value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>{events.map((event) => <option key={event.id} value={event.id}>{event.name}</option>)}</select></label></div>}
 
+          {section === "analytics" && selectedEvent(events, selectedId) && <AnalyticsPanel data={analytics} error={analyticsError} loading={loadingSection} refresh={loadSectionData}/>}
           {section === "events" && <div className="eventPanel"><div className="panelTop"><div><small>YOUR FESTIVALS</small><h2>Recent events</h2></div><button onClick={loadEvents}>Refresh →</button></div>{loading ? <div className="eventEmpty">Loading your events…</div> : events.length === 0 ? <div className="eventEmpty"><strong>No events yet.</strong><span>Create your first event to start building Eventra.</span><button onClick={() => setEventModalOpen(true)}>+ Create your first event</button></div> : events.map((event) => <div className={"eventRow eventRowButton " + (event.id === selectedId ? "eventRowActive" : "")} key={event.id} onClick={() => setSelectedId(event.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedId(event.id); }}><div><strong>{event.name}</strong><span>{formatDate(event.start_date)} · {event.location || "Location not set"}</span></div><span className={"pill " + (event.status === "live" ? "live" : "")}>{event.status}</span><a className="eventPublicLink" href={"/event/" + event.slug} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>View site ↗</a><button type="button" className="eventEdit" onClick={(e) => { e.stopPropagation(); editEvent(event); }}>Edit</button><button type="button" className="eventDelete" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); removeEvent(event.id, event.name); }}>Delete</button><span className="rowArrow">→</span></div>)}</div>}
 
           {section !== "events" && !selectedEvent(events, selectedId) && <div className="eventEmpty"><strong>Create an event first.</strong><span>Resources belong to an event.</span></div>}
@@ -486,6 +499,28 @@ export default function Dashboard() {
 
 function selectedEvent(events, id) { return events.find((event) => event.id === id) || null; }
 function ResourcePanel({ title, count, hint, loading, children }) { return <div className="resourcePanel"><div className="resourceHeader"><div><small>EVENT MANAGEMENT</small><h2>{title}</h2><p>{hint}</p></div><span className="resourceCount">{count}</span></div>{children}{loading && <div className="eventEmpty">Loading…</div>}</div>; }
+function AnalyticsPanel({data,error,loading,refresh}) {
+  if (loading) return <div className="analyticsPanel"><div className="analyticsLoading">Building your event intelligence…</div></div>;
+  if (error) return <div className="analyticsPanel"><div className="analyticsError"><strong>Analytics couldn't load.</strong><span>{error}</span><button onClick={refresh}>Try again</button></div></div>;
+  if (!data) return <div className="analyticsPanel"><div className="analyticsLoading">Select an event to view analytics.</div></div>;
+  const o=data.overview||{}, c=data.charts||{}, growth=c.registration_growth||[], participation=c.programme_participation||[];
+  const maxGrowth=Math.max(1,...growth.map(x=>Number(x.count||0))), maxParticipation=Math.max(1,...participation.map(x=>Number(x.registrations||0)));
+  const cards=[["Participants",o.participants,"People registered"],["Teams",o.teams,"Groups in this event"],["Programmes",o.programmes,"Configured activities"],["Registrations",o.registrations,"Programme entries"],["Schedules",o.schedules,"Planned time slots"],["Completed",o.completed_programmes,"Completed schedule entries"],["Published results",o.published_results,"Officially visible"],["Certificates",o.certificates,"Generated records"],["ID cards",o.id_cards,"Issued records"],["Unread messages",o.unread_messages,"Need attention"]];
+  return <div className="analyticsPanel">
+    <div className="analyticsHero"><div><small>EVENT INTELLIGENCE</small><h2>Know what is happening.</h2><p>Live operational analytics built from the same Eventra data powering your event.</p></div><button onClick={refresh}>Refresh analytics ↻</button></div>
+    <div className="analyticsCards">{cards.map(([label,value,sub])=><div className="analyticsCard" key={label}><small>{label}</small><strong>{Number(value||0).toLocaleString()}</strong><span>{sub}</span></div>)}</div>
+    <div className="analyticsGrid">
+      <section className="analyticsChart"><div className="chartHead"><div><small>REGISTRATION GROWTH</small><h3>Entries over time</h3></div><b>{o.registrations||0} total</b></div>{growth.length?<div className="barChart">{growth.map(x=><div className="barItem" key={x.day} title={x.day+" · "+x.count}><span style={{height:Math.max(8,Number(x.count)/maxGrowth*100)+"%"}}></span><small>{x.day.slice(5)}</small></div>)}</div>:<div className="chartEmpty">No registrations yet.</div>}</section>
+      <section className="analyticsChart"><div className="chartHead"><div><small>PROGRAMME PARTICIPATION</small><h3>Where entries are going</h3></div></div>{participation.length?<div className="rankBars">{participation.map(x=><div className="rankBar" key={x.name}><div><span>{x.name}</span><b>{x.registrations}</b></div><i><em style={{width:Math.max(2,Number(x.registrations)/maxParticipation*100)+"%"}}/></i></div>)}</div>:<div className="chartEmpty">Add programmes and registrations to see participation.</div>}</section>
+      <Progress title="Schedule completion" value={c.schedule_completion?.percentage||0} detail={(c.schedule_completion?.completed||0)+" of "+(c.schedule_completion?.total||0)+" schedule entries completed"} />
+      <Progress title="Result publication" value={c.result_publication?.percentage||0} detail={(c.result_publication?.published||0)+" of "+(c.result_publication?.total||0)+" results published"} />
+      <Progress title="Certificate progress" value={c.certificate_progress?.percentage||0} detail={(c.certificate_progress?.generated||0)+" generated · "+(c.certificate_progress?.pending||0)+" pending"} />
+      <section className="analyticsChart analyticsNote"><small>OPERATIONS SNAPSHOT</small><h3>What needs attention?</h3><p>{o.unread_messages?o.unread_messages+" contact message"+(o.unread_messages===1?"":"s")+" waiting for a response.":"No unread contact messages."}</p><p>{c.result_publication?.draft?c.result_publication.draft+" result"+(c.result_publication.draft===1?"":"s")+" still unpublished.":"No unpublished results."}</p><p>{c.schedule_completion?.total && c.schedule_completion?.completed<c.schedule_completion.total?(c.schedule_completion.total-c.schedule_completion.completed)+" scheduled entries remain incomplete.":"All scheduled entries are complete."}</p></section>
+    </div>
+  </div>;
+}
+function Progress({title,value,detail}){return <section className="analyticsChart progressCard"><div className="chartHead"><div><small>{title.toUpperCase()}</small><h3>{value}%</h3></div><b>{detail}</b></div><div className="progressTrack"><span style={{width:value+"%"}}/></div></section>}
+
 function ScheduleTimelineRow({item,onEdit,onDelete}) {
   return <div className="timelineRow"><time>{new Date(item.starts_at).toLocaleString("en-IN",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})} — {new Date(item.ends_at).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"})}</time><div><strong>{item.programme_name}</strong><span>{item.venue_name||"Venue TBA"} · {item.status}</span></div><div><button type="button" onClick={()=>onEdit(item)}>Edit</button><button type="button" onClick={()=>onDelete(item.id)}>Delete</button></div></div>
 }
