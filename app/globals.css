@@ -176,3 +176,6 @@
 .adminLoginFoot a:hover{color:#171714}
 .adminLoginCopyright{text-align:center;margin:17px 0 0;font:8px 'DM Mono';letter-spacing:1.4px;color:#aaa59b}
 @media(max-width:560px){.adminLoginPage{padding:20px 16px}.adminLoginCard{padding:30px 22px;border-radius:16px}.adminLoginCard h1{font-size:39px;letter-spacing:-2.4px}.adminLoginBadge{display:none}.adminLoginBrand{margin-bottom:16px}}
+
+/* Accessibility contrast hardening */
+.eyebrow,.sectionIntro>span,.how>span,.workspace small,.sideNav small{color:#5f5d56}.heroMeta,.heroMeta span{color:#5f5d56}.dashHeading small{color:#5f5d56}.cards span,.stat span{color:#5f5d56}.tableHead{color:#66635b}.pill{color:#5f5d56}.pill.live{color:#4f6200}.features .featureGrid small{color:#c0beb7}.features .featureGrid p{color:#c0beb7}.steps b{color:#66635b}.steps p{color:#5f5d56}.resourceHeader small,.modalHeader small,.eventEmpty,.resourceRow span{color:#5f5d56}.sideBottom a:focus,.sideNav button:focus,.navLinks a:focus,.primary:focus,.secondary:focus{outline:3px solid #6f8500;outline-offset:2px}
