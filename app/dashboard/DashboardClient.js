@@ -201,9 +201,23 @@ export default function Dashboard() {
   async function printIdCard(card) {
     const participant = participants.find((item) => item.id === card.participant_id);
     const event = selectedEvent(events, selectedId);
-    const popup = window.open("", "_blank", "width=800,height=600");
-    if (!popup) return;
-    popup.document.write("<!doctype html><html><head><title>ID Card - " + (participant?.name || card.participant_name || "Participant") + "</title><style>body{font-family:Arial,sans-serif;background:#111;color:#fff;padding:40px}.card{width:620px;margin:auto;padding:36px;border-radius:28px;background:#f5f5f0;color:#111;box-shadow:0 20px 60px #0005}.brand{font-size:14px;letter-spacing:3px;text-transform:uppercase}.name{font-size:42px;font-weight:800;margin:50px 0 10px}.meta{font-size:18px;line-height:1.7}.number{margin-top:35px;padding-top:20px;border-top:1px solid #bbb;font-family:monospace}.print{margin:30px auto;display:block;padding:14px 22px;border:0;border-radius:999px;background:#d7ff3f;font-weight:800}@media print{body{background:#fff;padding:0}.print{display:none}}</style></head><body><div class="card"><div class="brand">" + (event?.name || "EVENTRA") + "</div><div class="name">" + (participant?.name || card.participant_name || "Participant") + "</div><div class="meta">Participant ID: " + (participant?.participant_code || card.participant_code || "—") + "</div><div class="number">CARD " + card.card_number + "</div></div><button class="print" onclick="window.print()">Print / Save as PDF</button></body></html>");
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"]/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[char]));
+    const popup = window.open("", "_blank", "width=900,height=700");
+    if (!popup) {
+      setError("Popup blocked. Allow popups for Eventra ID card printing.");
+      return;
+    }
+    const eventName = escapeHtml(event?.name || "EVENTRA");
+    const participantName = escapeHtml(participant?.name || card.participant_name || "Participant");
+    const participantCode = escapeHtml(participant?.participant_code || card.participant_code || "—");
+    const cardNumber = escapeHtml(card.card_number);
+    popup.document.open();
+    popup.document.write(
+      "<!doctype html><html><head><meta charset='utf-8'><title>ID Card - " + participantName +
+      "</title><style>body{font-family:Arial,sans-serif;background:#ddd;margin:0;min-height:100vh;display:grid;place-items:center}.card{width:760px;padding:42px;border-radius:30px;background:#111;color:#fff;border:4px solid #d7ff3f;box-shadow:0 20px 60px #0004}.brand{font:700 15px monospace;letter-spacing:4px;color:#d7ff3f}.name{font-size:48px;font-weight:800;margin:100px 0 10px}.meta{font-size:18px;color:#ccc}.number{margin-top:45px;padding-top:20px;border-top:1px solid #555;font:700 17px monospace}.print{margin:25px auto 0;display:block;padding:13px 20px;border:0;border-radius:999px;background:#d7ff3f;font-weight:800}@media print{body{background:#fff}.card{box-shadow:none}.print{display:none}}</style></head><body><div class='card'><div class='brand'>" +
+      eventName.toUpperCase() + "</div><div class='name'>" + participantName + "</div><div class='meta'>Participant ID: " +
+      participantCode + "</div><div class='number'>CARD " + cardNumber + "</div></div><button class='print' onclick='window.print()'>Print / Save as PDF</button></body></html>"
+    );
     popup.document.close();
   }
 
@@ -259,7 +273,7 @@ export default function Dashboard() {
   {nav.slice(5,7).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "registrations" ? "↳" : key === "schedules" ? "◷" : "✦"}</b></button>)}
   <small className="space">RESULTS & DOCUMENTS</small>
   {nav.slice(7).map(([key,label]) => <button key={key} type="button" className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "results" ? "◈" : key === "certificates" ? "▤" : key === "id-cards" ? "▣" : "□"}</b></button>)}
-  <div className="sideBottom"><button>⚙ <span>Settings</span></button><Link href="/">↗ <span>View website</span></Link><button type="button" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/admin-login"; }}>↪ <span>Sign out</span></button></div>
+  <div className="sideBottom"><Link href="/dashboard/documents">▤ <span>Document Studio</span></Link><Link href="/dashboard/registrations">↳ <span>Registration Desk</span></Link><Link href="/">↗ <span>View website</span></Link><button type="button" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/admin-login"; }}>↪ <span>Sign out</span></button></div>
 </aside>
         <section className="workspace">
           <div className="workspaceTop">
