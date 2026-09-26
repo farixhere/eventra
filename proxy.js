@@ -3,7 +3,7 @@ import { authorizeRequest } from "./lib/rbac";
 import { consumeRateLimit } from "./lib/rate-limit";
 import { auditLog } from "./lib/audit";
 
-const PUBLIC_API=new Set(["/api/auth/login","/api/auth/logout","/api/public-registration"]);
+const PUBLIC_API=new Set(["/api/auth/login","/api/auth/logout","/api/public-registration","/api/certificates/download"]);
 const COOKIE_MUTATIONS=new Set(["POST","PUT","PATCH","DELETE"]);
 
 function sameOrigin(request){
