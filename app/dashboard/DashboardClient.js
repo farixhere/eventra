@@ -323,7 +323,7 @@ export default function Dashboard() {
   {nav.slice(6,8).map(([key,label]) => <button key={key} className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "registrations" ? "↳" : key === "schedules" ? "◷" : "✦"}</b></button>)}
   <small className="space">RESULTS & DOCUMENTS</small>
   {nav.slice(8).map(([key,label]) => <button key={key} type="button" className={section === key ? "selected" : ""} onClick={() => setSection(key)}><span>{label}</span><b>{key === "results" ? "◈" : key === "certificates" ? "▤" : key === "id-cards" ? "▣" : "□"}</b></button>)}
-  <div className="sideBottom"><Link href="/dashboard/documents">▤ <span>Document Studio</span></Link><Link href="/dashboard/registrations">↳ <span>Registration Desk</span></Link><Link href="/">↗ <span>View website</span></Link><button type="button" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/admin-login"; }}>↪ <span>Sign out</span></button></div>
+  <div className="sideBottom"><Link href="/dashboard/access">⚿ <span>Access Control</span></Link><Link href="/dashboard/documents">▤ <span>Document Studio</span></Link><Link href="/dashboard/registrations">↳ <span>Registration Desk</span></Link><Link href="/">↗ <span>View website</span></Link><button type="button" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/admin-login"; }}>↪ <span>Sign out</span></button></div>
 </aside>
         <section className="workspace">
           <div className="workspaceTop">
