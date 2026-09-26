@@ -21,6 +21,7 @@ async function proxy(request){
    response.headers.set("Referrer-Policy","strict-origin-when-cross-origin");
    response.headers.set("Permissions-Policy","camera=(),microphone=(),geolocation=()");
    response.headers.set("X-DNS-Prefetch-Control","off");
+   if(pathname.startsWith("/api/") && !PUBLIC_API.has(pathname) && !pathname.startsWith("/api/v1/") && !(pathname==="/api/certificate-verifications"&&request.method==="GET")) response.headers.set("Cache-Control","no-store");
    return response;
  };
  if(pathname==="/admin-login"||pathname==="/dashboard/login")return addHeaders(NextResponse.next());
