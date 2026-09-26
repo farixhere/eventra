@@ -17,7 +17,7 @@ export async function POST(request){
   const b=await request.json();if(!b.eventId||!b.programmeId||!b.email?.trim())return Response.json({error:"eventId, programmeId and email are required"},{status:400});
   const sql=getDb(),programme=await sql`SELECT id FROM programmes WHERE id=${b.programmeId} AND event_id=${b.eventId}`;
   if(!programme.length)return Response.json({error:"Programme not found for this event"},{status:403});
-  const account=await sql`SELECT id FROM eventra_accounts WHERE lower(email)=lower(${b.email.trim()}) AND active=true LIMIT 1`;
+  const account=await sql`SELECT id FROM users WHERE lower(email)=lower(${b.email.trim()}) AND active=true LIMIT 1`;
   if(!account.length)return Response.json({error:"Judge account not found or inactive"},{status:400});
   const rows=await sql`INSERT INTO judge_assignments(event_id,programme_id,email,criteria,active) VALUES(${b.eventId},${b.programmeId},LOWER(TRIM(${b.email})),${JSON.stringify(b.criteria||[])}::jsonb,${b.active!==false}) ON CONFLICT(programme_id,email) DO UPDATE SET criteria=EXCLUDED.criteria,active=true RETURNING *`;
   await auditLog(request,{action:"judge.assignment.created",eventId:b.eventId,entityType:"judge_assignment",entityId:rows[0].id,changes:{programmeId:b.programmeId,email:rows[0].email}});
