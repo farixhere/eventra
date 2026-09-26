@@ -11,7 +11,7 @@ async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/admin-login" || pathname === "/dashboard/login") return NextResponse.next();
-  if (PUBLIC_API.has(pathname) || pathname.startsWith("/api/v1/")) return NextResponse.next();
+  if (PUBLIC_API.has(pathname) || pathname.startsWith("/api/v1/") || pathname === "/api/health") return NextResponse.next();
   if (pathname === "/api/contact" && request.method === "POST") return NextResponse.next();
   if (pathname === "/api/certificate-verifications" && request.method === "GET") return NextResponse.next();
 
