@@ -24,7 +24,7 @@ export async function POST(request){
   const b=await request.json(),email=String(b.email||"").trim().toLowerCase(),role=String(b.role||"").toLowerCase();
   if(!b.eventId||!email||!roles.has(role))return Response.json({error:"eventId, email and a supported event role are required"},{status:400});
   const sql=getDb();
-  const account=await sql`SELECT id FROM eventra_accounts WHERE lower(email)=${email} LIMIT 1`;
+  const account=await sql`SELECT id FROM users WHERE lower(email)=${email} AND active=true LIMIT 1`;
   if(!account[0])return Response.json({error:"User account not found"},{status:404});
   const event=await sql`SELECT id FROM events WHERE id=${b.eventId} LIMIT 1`;
   if(!event[0])return Response.json({error:"Event not found"},{status:404});
