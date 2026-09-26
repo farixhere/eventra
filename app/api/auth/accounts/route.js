@@ -20,7 +20,7 @@ export async function GET(request) {
         GROUP BY u.id ORDER BY u.created_at DESC`
     );
     return Response.json({accounts});
-  } catch (e) { return Response.json({error:"Unable to load accounts"},{status:500}); }
+  } catch { return Response.json({error:"Unable to load accounts"},{status:500}); }
 }
 
 export async function POST(request) {
@@ -67,14 +67,16 @@ export async function PATCH(request) {
       [b.name?.trim()||null,typeof b.active==="boolean"?b.active:null,b.id]
     );
     if (!rows[0]) return Response.json({error:"Account not found"},{status:404});
+    let roles;
     if (role) {
       const roleRow = await sql.unsafe("SELECT id FROM roles WHERE name=$1 LIMIT 1",[role]);
       if (!roleRow[0]) return Response.json({error:"Role not found"},{status:400});
       await sql.unsafe("DELETE FROM user_roles WHERE user_id=$1",[b.id]);
       await sql.unsafe("INSERT INTO user_roles(user_id,role_id) VALUES($1,$2)",[b.id,roleRow[0].id]);
+      roles=[role];
     }
     if (typeof b.active==="boolean" && !b.active) await revokeAccountSessions(b.id);
     await auditLog(request,{action:"user.updated",entityType:"user",entityId:rows[0].id,changes:safeChanges({name:b.name,globalRole:role,active:b.active,passwordChanged:Boolean(b.password)})});
-    return Response.json({account:{...rows[0},...(role?{roles:[role]}:{})}});
-  } catch(e) { return Response.json({error:"Unable to update account"},{status:400}); }
+    return Response.json({account:{...rows[0],...(roles?{roles}: {})}});
+  } catch { return Response.json({error:"Unable to update account"},{status:400}); }
 }
