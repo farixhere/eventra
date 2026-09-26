@@ -8,7 +8,7 @@ export async function GET(request) {
     const {parseUserToken}=await import("../../../lib/auth");
     const user=await parseUserToken(request.cookies.get("eventra_session")?.value,process.env.EVENTRA_ADMIN_PASSWORD);
     if(!user)return Response.json({error:"Authentication required"},{status:401});
-    const programmes = user.globalRole==="admin"||user.globalRole==="coordinator"
+    const programmes = user.globalRole==="admin"||user.globalRole==="organizer"
       ? await sql`SELECT id,name,category,type,max_participants,created_at FROM programmes WHERE event_id=${eventId} ORDER BY created_at DESC`
       : await sql`SELECT DISTINCT p.id,p.name,p.category,p.type,p.max_participants,p.created_at FROM programmes p JOIN judge_assignments ja ON ja.programme_id=p.id WHERE p.event_id=${eventId} AND lower(ja.email)=lower(${user.email}) AND ja.active=true ORDER BY p.created_at DESC`;
     return Response.json({programmes});
