@@ -23,7 +23,7 @@ export async function POST(request){
   const all=b.participantId
    ? await sql`SELECT id,total_score FROM results WHERE programme_id=${b.programmeId} AND participant_id IS NOT NULL AND verification_status='verified' ORDER BY total_score DESC,id`
    : await sql`SELECT id,total_score FROM results WHERE programme_id=${b.programmeId} AND team_id IS NOT NULL AND verification_status='verified' ORDER BY total_score DESC,id`;
-  for(let i=0;i<all.length;i++)await sql`UPDATE results SET position=${i+1},points=${i===0?5:i===1?3:i===2?1:0} WHERE id=${all[i].id}`;
+  const ranked = b.participantId ? await sql`SELECT id,RANK() OVER (ORDER BY total_score DESC) AS position FROM results WHERE programme_id=\${b.programmeId} AND participant_id IS NOT NULL AND verification_status='verified' ORDER BY total_score DESC,id` : await sql`SELECT id,RANK() OVER (ORDER BY total_score DESC) AS position FROM results WHERE programme_id=\${b.programmeId} AND team_id IS NOT NULL AND verification_status='verified' ORDER BY total_score DESC,id`;\n  for(const row of ranked){const rank=Number(row.position);await sql`UPDATE results SET position=\${rank},points=\${rank===1?5:rank===2?3:rank===3?1:0} WHERE id=\${row.id}`;}
   result=(await sql`SELECT * FROM results WHERE id=${result.id}`)[0];
   await auditLog(request,{action:"result.verified",eventId:b.eventId,entityType:"result",entityId:result.id,changes:safeChanges({judgeScoreIds:scores.map(s=>s.id),average,position:result.position,points:result.points})});
   return Response.json({result,judgeCount:scores.length,average});
