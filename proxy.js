@@ -13,6 +13,7 @@ async function proxy(request) {
   if (pathname === "/admin-login" || pathname === "/dashboard/login") return NextResponse.next();
   if (PUBLIC_API.has(pathname)) return NextResponse.next();
   if (pathname === "/api/contact" && request.method === "POST") return NextResponse.next();
+  if (pathname === "/api/certificate-verifications" && request.method === "GET") return NextResponse.next();
 
   const token = request.cookies.get(COOKIE_NAME)?.value;
   const authenticated = await verifyAdminToken(
