@@ -1,2 +1,22 @@
 import { createAdminToken, COOKIE_NAME } from "../../../../lib/auth";
-export async function POST(request){try{const body=await request.json();const configuredPassword=process.env.EVENTRA_ADMIN_PASSWORD;if(!configuredPassword)return Response.json({error:"Admin password is not configured on the server"},{status:503});if(!body.password||body.password!==configuredPassword)return Response.json({error:"Incorrect password"},{status:401});const token=await createAdminToken(configuredPassword);const response=Response.json({ok:true});response.headers.set("Set-Cookie",COOKIE_NAME+"="+token+"; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800");return response;}catch{return Response.json({error:"Unable to sign in"},{status:400});}}
+
+export async function POST(request){
+  try{
+    const body=await request.json();
+    const configuredPassword=process.env.EVENTRA_ADMIN_PASSWORD;
+    if(!configuredPassword) return Response.json({error:"Admin password is not configured on the server"},{status:503});
+    if(typeof body.password!=="string" || body.password.length===0 || body.password!==configuredPassword){
+      return Response.json({error:"Incorrect password"},{status:401});
+    }
+    const token=await createAdminToken(configuredPassword);
+    const response=Response.json({ok:true});
+    response.headers.set(
+      "Set-Cookie",
+      COOKIE_NAME+"="+token+"; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800"
+    );
+    response.headers.set("Cache-Control","no-store");
+    return response;
+  }catch{
+    return Response.json({error:"Unable to sign in"},{status:400});
+  }
+}
