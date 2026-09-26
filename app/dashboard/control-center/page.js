@@ -1,13 +1,3 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { COOKIE_NAME, verifyAdminToken } from "../../../lib/auth";
-import ControlCenterClient from "./ControlCenterClient";
-
-export const dynamic = "force-dynamic";
-
-export default async function ControlCenterPage() {
-  const token = (await cookies()).get(COOKIE_NAME)?.value;
-  const ok = await verifyAdminToken(token, process.env.EVENTRA_ADMIN_PASSWORD);
-  if (!ok) redirect("/admin-login?next=/dashboard/control-center");
-  return <ControlCenterClient />;
-}
+import {cookies} from "next/headers";import {redirect} from "next/navigation";import ControlCenterClient from "./ControlCenterClient";import {COOKIE_NAME,parseUserToken} from "../../../lib/auth";
+export const dynamic="force-dynamic";
+export default async function ControlCenterPage(){const user=await parseUserToken((await cookies()).get(COOKIE_NAME)?.value,process.env.EVENTRA_ADMIN_PASSWORD);if(!user||!["admin"].includes(user.globalRole))redirect("/dashboard?error=control-center");return <ControlCenterClient/>}
