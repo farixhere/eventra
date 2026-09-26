@@ -6,7 +6,7 @@ async function admin(request){
  const u=await parseUserToken(request.cookies.get("eventra_session")?.value,process.env.EVENTRA_ADMIN_PASSWORD);
  return u&&u.globalRole==="admin";
 }
-const roles=new Set(["coordinator","judge","viewer"]);
+const roles=new Set(["organizer","judge","viewer"]);
 
 export async function GET(request){
  try{
