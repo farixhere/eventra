@@ -15,9 +15,9 @@ export default async function EventPage({ params }) {
     COALESCE(website_sections,'{}'::jsonb) AS website_sections
     FROM events WHERE slug=${slug} LIMIT 1`;
   if (!ev.length || !ev[0].is_public) notFound();
-  const event=ev[0], sections={programmes:true,schedule:true,results:true,gallery:true,announcements:true,downloads:true,participants:true,contact:true,...(event.website_sections||{})};
+  const event=ev[0], fs=festivalSettings[0]||{}, branding=fs.branding||{}, sections={programmes:true,schedule:true,results:true,gallery:true,announcements:true,downloads:true,participants:true,contact:true,...(event.website_sections||{}),...(fs.navigation||{})};
 
-  const [programmes,schedules,announcements,results,participants,teams,media,downloads] = await Promise.all([
+  const [programmes,schedules,announcements,results,participants,teams,media,downloads,festivalSettings,liveUpdates] = await Promise.all([
     sql`SELECT id,name,category,type,max_participants,description,status FROM programmes WHERE event_id=${event.id} ORDER BY category NULLS LAST,name LIMIT 18`,
     sql`SELECT s.id,s.starts_at,s.ends_at,s.status,p.name AS programme_name,p.category,v.name AS venue_name,v.location AS venue_location
       FROM schedules s JOIN programmes p ON p.id=s.programme_id LEFT JOIN venues v ON v.id=s.venue_id
@@ -32,7 +32,7 @@ export default async function EventPage({ params }) {
     sql`SELECT id,name,participant_code FROM participants WHERE event_id=${event.id} ORDER BY name LIMIT 8`,
     sql`SELECT id,name,code FROM teams WHERE event_id=${event.id} ORDER BY name LIMIT 8`,
     sql`SELECT id,file_name,file_url,caption FROM media_assets WHERE event_id=${event.id} AND published=true ORDER BY created_at DESC LIMIT 8`,
-    (async()=>{try{return await sql`SELECT id,title,description,file_url,file_type FROM downloads WHERE event_id=${event.id} AND published=true ORDER BY created_at DESC LIMIT 6`}catch{return []}})()
+    (async()=>{try{return await sql`SELECT id,title,description,file_url,file_type FROM downloads WHERE event_id=${event.id} AND published=true ORDER BY created_at DESC LIMIT 6`}catch{return []}})(), sql`SELECT * FROM festival_settings WHERE event_id=${event.id} LIMIT 1`, sql`SELECT id,title,message,update_type,created_at FROM live_updates WHERE event_id=${event.id} ORDER BY created_at DESC LIMIT 6`
   ]);
 
   const dates=event.start_date ? date(event.start_date)+(event.end_date?" — "+date(event.end_date):"") : "Dates to be announced";
@@ -64,7 +64,7 @@ export default async function EventPage({ params }) {
       <div className="festivalHeroScroll">SCROLL TO EXPLORE <span>↓</span></div>
     </section>
 
-    {announcements.length>0&&sections.announcements&&<section className="festivalTicker" id="updates"><div className="tickerLabel"><span>LIVE</span> UPDATES</div><div className="tickerTrack">{announcements.map(a=><a href="#announcements" key={a.id}><b>{a.title}</b><span>{a.body}</span></a>)}</div></section>}
+    {(liveUpdates.length||announcements.length)>0&&sections.announcements&&<section className="festivalTicker" id="updates"><div className="tickerLabel"><span>LIVE</span> UPDATES</div><div className="tickerTrack">{[...liveUpdates.map(u=><a href="#updates" key={"live-"+u.id}><b>{u.title}</b><span>{u.message||u.update_type}</span></a>),...announcements.map(a=><a href="#announcements" key={a.id}><b>{a.title}</b><span>{a.body}</span></a>)}</div></section>}
     <section className="festivalStats"><div><strong>{programmes.length}</strong><span>Programmes</span></div><div><strong>{participants.length}{participants.length===8?"+":""}</strong><span>Participants</span></div><div><strong>{teams.length}{teams.length===8?"+":""}</strong><span>Teams</span></div><div><strong>{schedules.length}{schedules.length===12?"+":""}</strong><span>Scheduled moments</span></div></section>
 
     {sections.programmes&&<section id="programmes" className="festivalSection programmeSection">
