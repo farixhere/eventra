@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { COOKIE_NAME, verifyAdminToken } from "./lib/auth";
 
 const PUBLIC_API = new Set([
@@ -18,8 +17,7 @@ export async function middleware(request) {
 
     if (publicApi) return NextResponse.next();
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get(COOKIE_NAME)?.value;
+    const token = request.cookies.get(COOKIE_NAME)?.value;
     const valid = await verifyAdminToken(token, process.env.EVENTRA_ADMIN_PASSWORD);
 
     if (!valid) {
@@ -30,8 +28,7 @@ export async function middleware(request) {
   }
 
   if (pathname.startsWith("/dashboard") && pathname !== "/dashboard/login") {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(COOKIE_NAME)?.value;
+    const token = request.cookies.get(COOKIE_NAME)?.value;
     const valid = await verifyAdminToken(token, process.env.EVENTRA_ADMIN_PASSWORD);
 
     if (!valid) {
