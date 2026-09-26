@@ -19,3 +19,17 @@ CREATE TABLE IF NOT EXISTS eventra_rate_limits (
 CREATE INDEX IF NOT EXISTS idx_eventra_rate_limits_updated ON eventra_rate_limits(updated_at);
 ALTER TABLE eventra_accounts ADD COLUMN IF NOT EXISTS password_changed_at timestamptz;
 CREATE INDEX IF NOT EXISTS idx_eventra_accounts_active ON eventra_accounts(id) WHERE active=true;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_judge_scores_entry ON judge_scores(
+  event_id,programme_id,lower(judge_email),
+  COALESCE(participant_id,'00000000-0000-0000-0000-000000000000'::uuid),
+  COALESCE(team_id,'00000000-0000-0000-0000-000000000000'::uuid)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_results_entry ON results(
+  programme_id,
+  COALESCE(participant_id,'00000000-0000-0000-0000-000000000000'::uuid),
+  COALESCE(team_id,'00000000-0000-0000-0000-000000000000'::uuid)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_certificate_number ON certificates(certificate_number);
+CREATE INDEX IF NOT EXISTS idx_results_programme_score ON results(programme_id,total_score DESC,published);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_event_created ON audit_logs(event_id,created_at DESC);
