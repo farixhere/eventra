@@ -1,12 +1,7 @@
-import { Suspense } from "react";
-import AdminLoginClient from "./AdminLoginClient";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default function AdminLoginPage() {
-  return (
-    <Suspense fallback={<main className="adminLoginPage" />}>
-      <AdminLoginClient />
-    </Suspense>
-  );
+  redirect("/dashboard");
 }
