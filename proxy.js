@@ -9,16 +9,7 @@ function addHeaders(response) {
   return response;
 }
 
-export default function proxy(request) {
-  const path = request.nextUrl.pathname;
-  const isDashboard = path === "/dashboard" || path.startsWith("/dashboard/");
-  const isLogin = path === "/dashboard/login";
-  const hasSession = Boolean(request.cookies.get("eventra_session")?.value);
-
-  if (isDashboard && !isLogin && !hasSession) {
-    return addHeaders(NextResponse.redirect(new URL("/dashboard/login?next=" + encodeURIComponent(path), request.url)));
-  }
-
+export default function proxy() {
   return addHeaders(NextResponse.next());
 }
 
