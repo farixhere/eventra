@@ -1,3 +1,10 @@
+import {cookies} from "next/headers";
+import {redirect} from "next/navigation";
 import AccessClient from "./AccessClient";
+import {COOKIE_NAME,parseUserToken} from "../../../lib/auth";
 export const dynamic="force-dynamic";
-export default function AccessPage(){return <AccessClient/>}
+export default async function AccessPage(){
+ const user=await parseUserToken((await cookies()).get(COOKIE_NAME)?.value);
+ if(!user||user.globalRole!=="admin") redirect("/dashboard?error=access-control");
+ return <AccessClient/>;
+}
