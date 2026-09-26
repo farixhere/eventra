@@ -15,7 +15,7 @@ export default async function EventPage({ params }) {
     COALESCE(website_sections,'{}'::jsonb) AS website_sections
     FROM events WHERE slug=${slug} LIMIT 1`;
   if (!ev.length || !ev[0].is_public) notFound();
-  const event=ev[0], fs=festivalSettings[0]||{}, branding=fs.branding||{}, sections={programmes:true,schedule:true,results:true,gallery:true,announcements:true,downloads:true,participants:true,contact:true,...(event.website_sections||{}),...(fs.navigation||{})};
+  const event=ev[0];
 
   const [programmes,schedules,announcements,results,participants,teams,media,downloads,festivalSettings,liveUpdates] = await Promise.all([
     sql`SELECT id,name,category,type,max_participants,description,status FROM programmes WHERE event_id=${event.id} ORDER BY category NULLS LAST,name LIMIT 18`,
@@ -35,8 +35,8 @@ export default async function EventPage({ params }) {
     (async()=>{try{return await sql`SELECT id,title,description,file_url,file_type FROM downloads WHERE event_id=${event.id} AND published=true ORDER BY created_at DESC LIMIT 6`}catch{return []}})(), sql`SELECT * FROM festival_settings WHERE event_id=${event.id} LIMIT 1`, sql`SELECT id,title,message,update_type,created_at FROM live_updates WHERE event_id=${event.id} ORDER BY created_at DESC LIMIT 6`
   ]);
 
-  const dates=event.start_date ? date(event.start_date)+(event.end_date?" — "+date(event.end_date):"") : "Dates to be announced";
-  const theme={"--event-primary":event.primary_color||"#d7ff3f","--event-secondary":event.secondary_color||"#111111"};
+  const fs=festivalSettings[0]||{}, branding=fs.branding||{}, sections={programmes:true,schedule:true,results:true,gallery:true,announcements:true,downloads:true,participants:true,contact:true,...(event.website_sections||{}),...(fs.navigation||{})};\n  const dates=event.start_date ? date(event.start_date)+(event.end_date?" — "+date(event.end_date):"") : "Dates to be announced";
+  const theme={"--event-primary":branding.primary||event.primary_color||"#d7ff3f","--event-secondary":branding.secondary||event.secondary_color||"#111111"};
   const hero=event.banner_url?{backgroundImage:`linear-gradient(90deg,rgba(8,8,8,.88),rgba(8,8,8,.5),rgba(8,8,8,.18)),url("${event.banner_url}")`}:undefined;
 
   return <main className="festivalSite publicEvent" style={theme}>
