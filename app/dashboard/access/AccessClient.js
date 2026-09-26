@@ -35,7 +35,7 @@ export default function AccessClient(){
   setAccounts(x=>x.map(a=>a.id===id?d.account:a));
  }
  async function assign(email){
-  const role=prompt("Role: coordinator, judge, or viewer","judge");if(!role)return;
+  const role=prompt("Role: organizer, judge, or viewer","judge");if(!role)return;
   const r=await fetch("/api/auth/event-roles",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({eventId,email,role})}),d=await r.json();
   if(!r.ok){setError(d.error||"Unable to assign role");return}
   setAssignments(x=>[...x.filter(a=>a.id!==d.assignment.id),d.assignment]);
@@ -51,16 +51,16 @@ export default function AccessClient(){
   <div className="workspaceTop"><div className="workspaceTitle"><div className="workspaceEyebrow">EVENTRA / SECURITY</div><h1>Access Control Center</h1><p>Accounts, roles and event assignments.</p></div><a href="/dashboard">← Dashboard</a></div>
   {error&&<div className="formError">{error}</div>}
   <div className="resourcePanel"><div className="resourceHeader"><div><small>USER MANAGEMENT</small><h2>Create account</h2><p>Admin creates real user accounts.</p></div></div>
-   <form className="inlineForm" onSubmit={create}><input placeholder="Name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/><input type="email" placeholder="Email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required/><input type="password" placeholder="Password (8+)" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} minLength="8" required/><select value={form.globalRole} onChange={e=>setForm({...form,globalRole:e.target.value})}><option value="coordinator">Coordinator</option><option value="judge">Judge</option><option value="viewer">Viewer</option><option value="admin">Admin</option></select><button>Create account</button></form>
+   <form className="inlineForm" onSubmit={create}><input placeholder="Name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/><input type="email" placeholder="Email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required/><input type="password" placeholder="Password (8+)" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} minLength="8" required/><select value={form.globalRole} onChange={e=>setForm({...form,globalRole:e.target.value})}><option value="organizer">Organizer</option><option value="judge">Judge</option><option value="viewer">Viewer</option><option value="admin">Admin</option></select><button>Create account</button></form>
   </div>
   <div className="resourcePanel"><div className="resourceHeader"><div><small>ACCOUNTS</small><h2>Users</h2><p>Enable, disable or change a user's global role.</p></div></div>
-   <div className="resourceList">{accounts.map(a=><div className="resourceRow" key={a.id}><div><strong>{a.name}</strong><span>{a.email} · {a.global_role} · {a.active?"Active":"Disabled"}</span></div><div><button onClick={()=>update(a.id,{active:!a.active})}>{a.active?"Disable":"Enable"}</button><select value={a.global_role} onChange={e=>update(a.id,{globalRole:e.target.value})}><option value="admin">Admin</option><option value="coordinator">Coordinator</option><option value="judge">Judge</option><option value="viewer">Viewer</option></select></div></div>)}</div>
+   <div className="resourceList">{accounts.map(a=><div className="resourceRow" key={a.id}><div><strong>{a.name}</strong><span>{a.email} · {a.global_role} · {a.active?"Active":"Disabled"}</span></div><div><button onClick={()=>update(a.id,{active:!a.active})}>{a.active?"Disable":"Enable"}</button><select value={a.global_role} onChange={e=>update(a.id,{globalRole:e.target.value})}><option value="admin">Admin</option><option value="organizer">Organizer</option><option value="judge">Judge</option><option value="viewer">Viewer</option></select></div></div>)}</div>
   </div>
   <div className="resourcePanel"><div className="resourceHeader"><div><small>EVENT ACCESS</small><h2>Assignments</h2><p>Assign a user to one event without exposing other events.</p></div></div>
    <select value={eventId} onChange={e=>setEventId(e.target.value)}><option value="">Select event</option>{events.map(e=><option key={e.id} value={e.id}>{e.name}</option>)}</select>
    {eventId&&<div className="resourceList">{accounts.filter(a=>a.active&&a.global_role!=="admin").map(a=><div className="resourceRow" key={a.id}><div><strong>{a.name}</strong><span>{a.email}</span></div><button onClick={()=>assign(a.email)}>Assign / change role</button></div>)}</div>}
    <div className="resourceList">{assignments.map(a=><div className="resourceRow" key={a.id}><div><strong>{a.email}</strong><span>{a.role} · {a.active?"Active":"Inactive"}</span></div><button onClick={()=>remove(a.id)}>Remove</button></div>)}</div>
   </div>
-  <div className="resourcePanel"><div className="resourceHeader"><div><small>PERMISSION VERIFICATION</small><h2>Effective permissions</h2><p>Admin: full access. Coordinator: assigned event management and result verification/publishing. Judge: assigned programmes and score submission. Viewer: read-only assigned event.</p></div></div></div>
+  <div className="resourcePanel"><div className="resourceHeader"><div><small>PERMISSION VERIFICATION</small><h2>Effective permissions</h2><p>Admin: full access. Organizer: assigned event management and result verification/publishing. Judge: assigned programmes and score submission. Viewer: read-only assigned event.</p></div></div></div>
  </section></div></main>;
 }
