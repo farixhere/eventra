@@ -1,4 +1,5 @@
 import { getDb } from "../../../lib/db";
+import { auditLog } from "../../../lib/audit";
 
 function makeNumber() {
   return "EVT-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 7).toUpperCase();
@@ -30,6 +31,10 @@ export async function POST(request) {
     const body = await request.json();
     if (!body.eventId || !body.title) return Response.json({ error: "Event and certificate title are required" }, { status: 400 });
     const sql = getDb();
+    if(body.resultId){
+      const eligible=await sql`SELECT r.id FROM results r JOIN programmes p ON p.id=r.programme_id WHERE r.id=${body.resultId} AND p.event_id=${body.eventId} AND r.published=true LIMIT 1`;
+      if(!eligible[0])return Response.json({error:"Certificate can only be generated for a published result"},{status:409});
+    }
     const number = body.certificateNumber?.trim() || makeNumber();
     const rows = await sql`
       INSERT INTO certificates (event_id, result_id, participant_id, team_id, title, certificate_type, certificate_number, file_url)
@@ -38,6 +43,7 @@ export async function POST(request) {
     `;
     const verificationCode=crypto.randomUUID().replaceAll("-","").slice(0,16).toUpperCase();
     await sql`INSERT INTO certificate_verifications(certificate_id,verification_code) VALUES(${rows[0].id},${verificationCode}) ON CONFLICT(certificate_id) DO UPDATE SET verification_code=EXCLUDED.verification_code`;
+    await auditLog(request,{action:"certificate.generated",eventId:body.eventId,entityType:"certificate",entityId:rows[0].id,changes:{certificateNumber:number,resultId:body.resultId||null}});
     return Response.json({ certificate: rows[0], verificationCode }, { status: 201 });
   } catch (error) {
     console.error("POST /api/certificates failed", error);
