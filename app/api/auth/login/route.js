@@ -18,7 +18,7 @@ export async function POST(request) {
       return Response.json({ error: "Email and password are required." }, { status: 400, headers: { "Cache-Control": "no-store" } });
     }
 
-    const limit = await consumeRateLimit("login:" + clientIp(request) + ":" + email, 10, 900);
+    const limit = await consumeRateLimit("login:v2:" + clientIp(request) + ":" + email, 10, 900);
     if (!limit.allowed) {
       return Response.json({ error: "Too many sign-in attempts. Try again later." }, {
         status: 429,
