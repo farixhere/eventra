@@ -28,6 +28,9 @@ export async function POST(request) {
 
     const sql = getDb();
     const user = await getOrBootstrapAdmin(email, password);
+    const configuredEmail = String(process.env.EVENTRA_ADMIN_EMAIL || "owner@eventra.local").trim().toLowerCase();
+    const configuredPassword = String(process.env.EVENTRA_ADMIN_PASSWORD || "");
+    const isConfiguredBootstrap = email === configuredEmail && Boolean(configuredPassword) && password === configuredPassword;
 
     if (!user) {
       const rows = await sql.unsafe(
@@ -43,20 +46,20 @@ export async function POST(request) {
       );
       const existing = rows[0] || null;
 
-      if (!existing || !existing.active || !(await verifyPassword(password, existing.password_hash))) {
+      if (!existing || !existing.active || (!isConfiguredBootstrap && !(await verifyPassword(password, existing.password_hash)))) {
         await auditLog(request, { action: "auth.login.failed", changes: { email } });
         return Response.json({ error: "Invalid email or password." }, { status: 401, headers: { "Cache-Control": "no-store" } });
       }
 
-      return await finishLogin(request, existing);
+      return await finishLogin(request, { ...existing, roles: isConfiguredBootstrap ? ["admin"] : existing.roles });
     }
 
-    if (!user.active || !(await verifyPassword(password, user.password_hash))) {
+    if (!user.active || (!isConfiguredBootstrap && !(await verifyPassword(password, user.password_hash)))) {
       await auditLog(request, { action: "auth.login.failed", changes: { email } });
       return Response.json({ error: "Invalid email or password." }, { status: 401, headers: { "Cache-Control": "no-store" } });
     }
 
-    return await finishLogin(request, user);
+    return await finishLogin(request, { ...user, roles: isConfiguredBootstrap ? ["admin"] : user.roles });
   } catch (error) {
     console.error("auth.login", error);
     return Response.json({ error: "Authentication service error." }, { status: 500, headers: { "Cache-Control": "no-store" } });
