@@ -50,7 +50,8 @@ ALTER TABLE results
   ADD COLUMN IF NOT EXISTS score_breakdown jsonb NOT NULL DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS judge_scores jsonb NOT NULL DEFAULT '[]'::jsonb,
   ADD COLUMN IF NOT EXISTS published_by text,
-  ADD COLUMN IF NOT EXISTS corrected_at timestamptz;
+  ADD COLUMN IF NOT EXISTS corrected_at timestamptz,
+  ADD COLUMN IF NOT EXISTS correction_reason text;
 
 CREATE TABLE IF NOT EXISTS result_corrections (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
