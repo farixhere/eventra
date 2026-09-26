@@ -1,1 +1,3 @@
-Production migration runner enabled. This file exists only to ensure the latest main branch is picked up by the deployment integration.
+Production migration runner enabled.
+
+Fresh production deployment trigger after migration-runner verification: 2026-09-26.
