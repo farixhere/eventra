@@ -36,7 +36,9 @@ export async function POST(request) {
       VALUES (${body.eventId}, ${body.resultId || null}, ${body.participantId || null}, ${body.teamId || null}, ${body.title.trim()}, ${body.certificateType || "participation"}, ${number}, ${body.fileUrl || null})
       RETURNING *
     `;
-    return Response.json({ certificate: rows[0] }, { status: 201 });
+    const verificationCode=crypto.randomUUID().replaceAll("-","").slice(0,16).toUpperCase();
+    await sql`INSERT INTO certificate_verifications(certificate_id,verification_code) VALUES(${rows[0].id},${verificationCode}) ON CONFLICT(certificate_id) DO UPDATE SET verification_code=EXCLUDED.verification_code`;
+    return Response.json({ certificate: rows[0], verificationCode }, { status: 201 });
   } catch (error) {
     console.error("POST /api/certificates failed", error);
     return Response.json({ error: "Unable to create certificate" }, { status: 500 });
