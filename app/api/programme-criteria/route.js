@@ -1,4 +1,5 @@
 import { getDb } from "../../../lib/db";
+import { auditLog } from "../../../lib/audit";
 
 export async function GET(request){
   try{
@@ -23,6 +24,8 @@ export async function POST(request){
     const maxScore=Number(body.maxScore??10),weight=Number(body.weight??1),sortOrder=Number(body.sortOrder??0);
     if(!Number.isFinite(maxScore)||maxScore<=0||!Number.isFinite(weight)||weight<=0||!Number.isInteger(sortOrder)||sortOrder<0) return Response.json({error:"Invalid criteria values"},{status:400});
     const rows=await sql`INSERT INTO programme_criteria(programme_id,name,description,max_score,weight,sort_order,active) VALUES(${body.programmeId},${body.name},${body.description||null},${maxScore},${weight},${sortOrder},${body.active!==false}) RETURNING *`;
+    const event=(await sql`SELECT event_id FROM programmes WHERE id=${body.programmeId}`)[0];
+    await auditLog(request,{action:"programme.criteria.created",eventId:event?.event_id||null,entityType:"programme_criteria",entityId:rows[0].id,changes:{programmeId:body.programmeId,name:body.name,maxScore,weight}});
     return Response.json({criteria:rows[0]},{status:201});
   }catch(error){
     console.error("POST /api/programme-criteria failed",error);
