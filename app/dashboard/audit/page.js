@@ -1,0 +1,8 @@
+"use client";
+import {useEffect,useState} from "react";
+export default function AuditPage(){
+ const [logs,setLogs]=useState([]),[action,setAction]=useState(""),[loading,setLoading]=useState(true);
+ async function load(){setLoading(true);const qs=action?"?action="+encodeURIComponent(action):"";const r=await fetch("/api/audit-logs"+qs,{cache:"no-store"});const d=await r.json();setLogs(d.logs||[]);setLoading(false)}
+ useEffect(()=>{load()},[]);
+ return <main style={{padding:24,maxWidth:1200,margin:"0 auto"}}><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center"}}><div><h1>Audit History</h1><p>Administrative activity and security events.</p></div><button onClick={load}>Refresh</button></div><div style={{margin:"18px 0"}}><input value={action} onChange={e=>setAction(e.target.value)} placeholder="Filter action e.g. result.published" style={{padding:10,width:"100%",maxWidth:420}}/><button onClick={load} style={{marginLeft:8,padding:10}}>Filter</button></div>{loading?<p>Loading…</p>:<div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th align="left">Time</th><th align="left">Action</th><th align="left">Entity</th><th align="left">Event</th><th align="left">Details</th></tr></thead><tbody>{logs.map(x=><tr key={x.id}><td>{new Date(x.created_at).toLocaleString()}</td><td>{x.action}</td><td>{x.entity_type||"—"}</td><td>{x.event_id||"—"}</td><td><pre style={{whiteSpace:"pre-wrap",maxWidth:520}}>{JSON.stringify(x.changes)}</pre></td></tr>)}</tbody></table></div>}</main>
+}
