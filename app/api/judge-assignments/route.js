@@ -4,7 +4,11 @@ import {auditLog} from "../../../lib/audit";
 export async function GET(request){
  try{
   const eventId=new URL(request.url).searchParams.get("eventId");if(!eventId)return Response.json({error:"eventId is required"},{status:400});
-  const sql=getDb(),rows=await sql`SELECT ja.id,ja.event_id,ja.programme_id,ja.email,ja.criteria,ja.active,ja.created_at,p.name AS programme_name FROM judge_assignments ja JOIN programmes p ON p.id=ja.programme_id WHERE ja.event_id=${eventId} ORDER BY p.name,ja.email`;
+  const sql=getDb(),{parseUserToken}=await import("../../../lib/auth"),u=await parseUserToken(request.cookies.get("eventra_session")?.value,process.env.EVENTRA_ADMIN_PASSWORD);
+  if(!u)return Response.json({error:"Authentication required"},{status:401});
+  const rows=u.globalRole==="admin"||u.globalRole==="coordinator"
+   ? await sql`SELECT ja.id,ja.event_id,ja.programme_id,ja.email,ja.criteria,ja.active,ja.created_at,p.name AS programme_name FROM judge_assignments ja JOIN programmes p ON p.id=ja.programme_id WHERE ja.event_id=${eventId} ORDER BY p.name,ja.email`
+   : await sql`SELECT ja.id,ja.event_id,ja.programme_id,ja.email,ja.criteria,ja.active,ja.created_at,p.name AS programme_name FROM judge_assignments ja JOIN programmes p ON p.id=ja.programme_id WHERE ja.event_id=${eventId} AND lower(ja.email)=lower(${u.email}) AND ja.active=true ORDER BY p.name`;
   return Response.json({assignments:rows});
  }catch(error){return Response.json({error:"Unable to load judge assignments"},{status:500})}
 }
