@@ -1,6 +1,6 @@
 import { getDb } from "../../../lib/db";
 
-const required = ["events","programmes","participants","teams","schedules","registrations","event_roles","judge_assignments","programme_criteria","judge_scores","results","result_corrections","certificates","certificate_verifications","audit_logs","users","user_roles","roles","sessions","eventra_rate_limits"];
+const required = ["events","programmes","participants","teams","schedules","registrations","event_roles","judge_assignments","programme_criteria","judge_scores","results","result_corrections","certificates","certificate_verifications","audit_logs","users","user_roles","roles","permissions","role_permissions","sessions","eventra_rate_limits","festival_settings","api_keys"];
 
 export async function GET() {
   try {
