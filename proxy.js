@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guardApi } from "./lib/api-guard";
 
 function addHeaders(response) {
   response.headers.set("X-Content-Type-Options", "nosniff");
@@ -9,7 +10,11 @@ function addHeaders(response) {
   return response;
 }
 
-export default function proxy() {
+export default async function proxy(request) {
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    const blocked = await guardApi(request);
+    if (blocked) return addHeaders(blocked);
+  }
   return addHeaders(NextResponse.next());
 }
 

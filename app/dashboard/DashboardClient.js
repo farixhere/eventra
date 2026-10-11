@@ -63,6 +63,7 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const response = await fetch("/api/events", { cache: "no-store" });
+      if (response.status === 401) { window.location.href = "/dashboard/login"; return; }
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to load events");
       const nextEvents = data.events || [];
